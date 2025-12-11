@@ -1,0 +1,13 @@
+# RockTimer - Pi 4 (Central Server + Hog Close sensor)
+
+device_id: "hog_close"
+
+gpio:
+  sensor_pin: 17      # Tidtagningssensor (laser)
+  arm_pin: 27         # Arm-sensor (IR) - håll handen framför för att arma
+  debounce_ms: 50
+
+server:
+  host: "0.0.0.0"
+  http_port: 8080
+  udp_port: 5000

@@ -1,0 +1,16 @@
+# RockTimer Konfiguration
+
+# Enhets-ID (för sensorer: tee, hog_close, hog_far)
+device_id: "tee"
+
+# GPIO
+gpio:
+  sensor_pin: 17
+  debounce_ms: 50
+
+# Server-adress (för sensorer)
+server:
+  host: "192.168.50.1"
+  port: 5000          # UDP-port
+  http_port: 8080     # Webb-UI (endast Pi 4)
+  udp_port: 5000      # Samma som port (endast Pi 4)

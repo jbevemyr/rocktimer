@@ -1,0 +1,11 @@
+# RockTimer - Pi Zero 2 W (Tee Line)
+
+device_id: "tee"
+
+gpio:
+  sensor_pin: 17
+  debounce_ms: 50
+
+server:
+  host: "192.168.50.1"
+  port: 5000
