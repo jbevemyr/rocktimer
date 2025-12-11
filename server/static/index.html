@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Curling Stone Timer</title>
+    <title>RockTimer</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -111,7 +111,7 @@
         }
 
         .time-value {
-            font-size: 2.8rem;
+            font-size: 3.5rem;
             font-weight: 700;
             letter-spacing: -0.02em;
             transition: font-size 0.3s ease;
@@ -120,7 +120,7 @@
         .time-value.waiting { opacity: 0.4; }
 
         .main-row.expanded .time-value {
-            font-size: 5rem;
+            font-size: 7rem;
         }
 
         .main-row.expanded .time-label {
@@ -297,7 +297,7 @@
     <div class="container">
         <header>
             <span class="logo">🥌</span>
-            <h1>Curling Stone Timer</h1>
+            <h1>RockTimer</h1>
             <div class="status-dot" id="status-dot" title="Status"></div>
         </header>
 
@@ -390,7 +390,7 @@
 
             const teeHogEl = document.getElementById('value-tee-hog');
             if (session.tee_to_hog_close_ms !== null) {
-                teeHogEl.textContent = (session.tee_to_hog_close_ms / 1000).toFixed(2) + 's';
+                teeHogEl.textContent = (session.tee_to_hog_close_ms / 1000).toFixed(2);
                 teeHogEl.classList.remove('waiting');
             } else {
                 teeHogEl.textContent = '--';
@@ -399,7 +399,7 @@
 
             const hogHogEl = document.getElementById('value-hog-hog');
             if (session.hog_to_hog_ms !== null) {
-                hogHogEl.textContent = (session.hog_to_hog_ms / 1000).toFixed(2) + 's';
+                hogHogEl.textContent = (session.hog_to_hog_ms / 1000).toFixed(2);
                 hogHogEl.classList.remove('waiting');
             } else {
                 hogHogEl.textContent = '--';
@@ -421,9 +421,9 @@
                     tbody.innerHTML = data.map(record => {
                         const time = record.timestamp ? new Date(record.timestamp).toLocaleTimeString('sv-SE') : '--';
                         const teeHog = record.tee_to_hog_close_ms !== null 
-                            ? (record.tee_to_hog_close_ms / 1000).toFixed(2) + 's' : '--';
+                            ? (record.tee_to_hog_close_ms / 1000).toFixed(2) : '--';
                         const hogHog = record.hog_to_hog_ms !== null 
-                            ? (record.hog_to_hog_ms / 1000).toFixed(2) + 's' : '--';
+                            ? (record.hog_to_hog_ms / 1000).toFixed(2) : '--';
                         return `<tr>
                             <td class="time-col">${time}</td>
                             <td class="tee-hog-col">${teeHog}</td>
