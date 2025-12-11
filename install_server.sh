@@ -22,7 +22,7 @@ apt-get update
 apt-get install -y \
     python3-pip \
     python3-venv \
-    chromium-browser \
+    chromium \
     unclutter \
     espeak-ng
 
@@ -77,7 +77,7 @@ User=${USER}
 Environment=DISPLAY=:0
 Environment=XAUTHORITY=/home/${USER}/.Xauthority
 ExecStartPre=/bin/sleep 5
-ExecStart=/usr/bin/chromium-browser --kiosk --noerrdialogs --disable-infobars --no-first-run --start-fullscreen http://localhost:8080
+ExecStart=/usr/bin/chromium --kiosk --noerrdialogs --disable-infobars --no-first-run --start-fullscreen http://localhost:8080
 Restart=always
 RestartSec=5
 
