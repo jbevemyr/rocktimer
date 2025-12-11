@@ -23,7 +23,6 @@ from dataclasses import dataclass
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse, FileResponse
-from pydantic import BaseModel
 import uvicorn
 
 # Försök importera GPIO
@@ -383,32 +382,21 @@ async def lifespan(app: FastAPI):
 app = FastAPI(title="RockTimer", version="1.0.0", lifespan=lifespan)
 
 
-class ArmResponse(BaseModel):
-    success: bool
-    state: str
-
-
-class StatusResponse(BaseModel):
-    state: str
-    session: dict
-    sensors: dict
-
-
-@app.post("/api/arm", response_model=ArmResponse)
+@app.post("/api/arm")
 async def arm_system():
     success = server.arm()
-    return ArmResponse(success=success, state=server.state.value)
+    return {"success": success, "state": server.state.value}
 
 
-@app.post("/api/disarm", response_model=ArmResponse)
+@app.post("/api/disarm")
 async def disarm_system():
     success = server.disarm()
-    return ArmResponse(success=success, state=server.state.value)
+    return {"success": success, "state": server.state.value}
 
 
-@app.get("/api/status", response_model=StatusResponse)
+@app.get("/api/status")
 async def get_status():
-    return StatusResponse(**server.get_state())
+    return server.get_state()
 
 
 @app.get("/api/current")
