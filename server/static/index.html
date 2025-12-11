@@ -337,6 +337,12 @@
 
         <div class="divider" id="divider">
             <div class="divider-line"></div>
+            <button class="btn-toggle" id="btn-toggle" onclick="toggleHistory()" title="Show/Hide history">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" id="toggle-icon">
+                    <polyline points="18 15 12 9 6 15"></polyline>
+                </svg>
+                <span id="toggle-text">Hide</span>
+            </button>
             <div class="divider-handle">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <line x1="5" y1="9" x2="19" y2="9"></line>
@@ -344,12 +350,6 @@
                 </svg>
                 History
             </div>
-            <button class="btn-toggle" id="btn-toggle" onclick="toggleHistory()" title="Visa/Göm historik">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" id="toggle-icon">
-                    <polyline points="18 15 12 9 6 15"></polyline>
-                </svg>
-                <span id="toggle-text">Göm</span>
-            </button>
             <button class="btn-clear" onclick="clearHistory()">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M3 6h18"></path>
@@ -474,12 +474,12 @@
                 section.classList.remove('collapsed');
                 mainRow.classList.remove('expanded');
                 icon.innerHTML = '<polyline points="18 15 12 9 6 15"></polyline>';
-                text.textContent = 'Göm';
+                text.textContent = 'Hide';
             } else {
                 section.classList.add('collapsed');
                 mainRow.classList.add('expanded');
                 icon.innerHTML = '<polyline points="6 9 12 15 18 9"></polyline>';
-                text.textContent = 'Visa';
+                text.textContent = 'Show';
             }
         }
 
