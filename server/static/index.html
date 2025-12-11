@@ -88,7 +88,7 @@
 
         .time-card {
             flex: 1;
-            padding: 14px 16px;
+            padding: 24px 16px;
             border-radius: 14px;
             color: white;
             display: flex;
@@ -96,6 +96,7 @@
             justify-content: center;
             align-items: center;
             text-align: center;
+            min-height: 120px;
         }
 
         .time-card.tee-hog {
@@ -107,14 +108,14 @@
         }
 
         .time-label {
-            font-size: 0.85rem;
+            font-size: 1rem;
             font-weight: 500;
             opacity: 0.85;
-            margin-bottom: 2px;
+            margin-bottom: 4px;
         }
 
         .time-value {
-            font-size: 3.5rem;
+            font-size: 4.5rem;
             font-weight: 700;
             letter-spacing: -0.02em;
             transition: font-size 0.3s ease;
@@ -123,11 +124,15 @@
         .time-value.waiting { opacity: 0.4; }
 
         .main-row.expanded .time-value {
-            font-size: 7rem;
+            font-size: 8rem;
         }
 
         .main-row.expanded .time-label {
-            font-size: 1.1rem;
+            font-size: 1.3rem;
+        }
+
+        .main-row.expanded .time-card {
+            min-height: 180px;
         }
 
         /* Rearm button */
