@@ -146,35 +146,40 @@ class RockTimerServer:
     def setup_gpio(self):
         """Konfigurera GPIO för sensorer."""
         if not GPIO_AVAILABLE:
-            logger.warning("GPIO ej tillgängligt")
+            logger.warning("GPIO ej tillgängligt - kör utan lokal sensor")
             return
         
-        GPIO.setmode(GPIO.BCM)
-        
-        # Hog close sensor (tidtagning)
-        sensor_pin = self.config['gpio']['sensor_pin']
-        debounce_ms = self.config['gpio']['debounce_ms']
-        
-        GPIO.setup(sensor_pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-        GPIO.add_event_detect(
-            sensor_pin,
-            GPIO.FALLING,
-            callback=self._local_sensor_triggered,
-            bouncetime=debounce_ms
-        )
-        logger.info(f"Tidtagningssensor på GPIO {sensor_pin}")
-        
-        # Arm-sensor (IR-sensor för att arma systemet)
-        arm_pin = self.config['gpio'].get('arm_pin')
-        if arm_pin:
-            GPIO.setup(arm_pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+        try:
+            GPIO.setmode(GPIO.BCM)
+            
+            # Hog close sensor (tidtagning)
+            sensor_pin = self.config['gpio']['sensor_pin']
+            debounce_ms = self.config['gpio']['debounce_ms']
+            
+            GPIO.setup(sensor_pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
             GPIO.add_event_detect(
-                arm_pin,
+                sensor_pin,
                 GPIO.FALLING,
-                callback=self._arm_sensor_triggered,
-                bouncetime=500  # Längre debounce för att undvika dubbelarmering
+                callback=self._local_sensor_triggered,
+                bouncetime=debounce_ms
             )
-            logger.info(f"Arm-sensor (IR) på GPIO {arm_pin}")
+            logger.info(f"Tidtagningssensor på GPIO {sensor_pin}")
+            
+            # Arm-sensor (IR-sensor för att arma systemet)
+            arm_pin = self.config['gpio'].get('arm_pin')
+            if arm_pin:
+                GPIO.setup(arm_pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+                GPIO.add_event_detect(
+                    arm_pin,
+                    GPIO.FALLING,
+                    callback=self._arm_sensor_triggered,
+                    bouncetime=500
+                )
+                logger.info(f"Arm-sensor (IR) på GPIO {arm_pin}")
+                
+        except Exception as e:
+            logger.error(f"GPIO-fel: {e}")
+            logger.warning("Fortsätter utan lokal GPIO - använd endast nätverkssensorer")
     
     def _local_sensor_triggered(self, channel):
         """Callback för lokal sensor (hog_close)."""
