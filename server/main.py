@@ -311,27 +311,32 @@ class RockTimerServer:
             # Konvertera till sekunder
             seconds = time_ms / 1000.0
             
-            # Formatera för uppläsning (t.ex. "3 point 0 6")
+            # Formatera för uppläsning (t.ex. "3 point 1 0")
             whole = int(seconds)
             decimals = int((seconds - whole) * 100)
             text = f"{whole} point {decimals // 10} {decimals % 10}"
             
             logger.info(f"Speaking: '{text}'")
             
-            # Kör espeak-ng i bakgrunden (använd full sökväg)
-            espeak_path = '/usr/bin/espeak-ng'
-            env = {
-                'ALSA_CARD': '2',  # Headphones
-                'HOME': '/root'
-            }
-            subprocess.Popen(
-                [espeak_path, '-v', 'en', '-s', '150', text],
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL,
-                env=env
-            )
+            # Försök Piper först, fallback till espeak-ng
+            piper_path = '/opt/piper/piper'
+            voice_path = '/opt/piper/voices/en_US-lessac-medium.onnx'
+            
+            if os.path.exists(piper_path) and os.path.exists(voice_path):
+                # Piper: echo text | piper | aplay
+                cmd = f'echo "{text}" | {piper_path} --model {voice_path} --output-raw | aplay -r 22050 -f S16_LE -c 1 -D plughw:2,0 -q'
+                subprocess.Popen(cmd, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            else:
+                # Fallback till espeak-ng
+                env = {'ALSA_CARD': '2', 'HOME': '/root'}
+                subprocess.Popen(
+                    ['/usr/bin/espeak-ng', '-v', 'en', '-s', '150', text],
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                    env=env
+                )
         except FileNotFoundError:
-            logger.warning("espeak-ng ej installerat på /usr/bin/espeak-ng")
+            logger.warning("TTS ej installerat")
         except Exception as e:
             logger.error(f"TTS-fel: {e}")
     
