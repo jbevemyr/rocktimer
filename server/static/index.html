@@ -72,6 +72,11 @@
             gap: 10px;
             margin-bottom: 10px;
             flex-shrink: 0;
+            transition: flex 0.3s ease;
+        }
+
+        .main-row.expanded {
+            flex: 1;
         }
 
         .time-cards {
@@ -109,9 +114,18 @@
             font-size: 2.8rem;
             font-weight: 700;
             letter-spacing: -0.02em;
+            transition: font-size 0.3s ease;
         }
 
         .time-value.waiting { opacity: 0.4; }
+
+        .main-row.expanded .time-value {
+            font-size: 5rem;
+        }
+
+        .main-row.expanded .time-label {
+            font-size: 1.1rem;
+        }
 
         /* Rearm button */
         .btn-rearm {
@@ -437,13 +451,16 @@
         function toggleHistory() {
             historyVisible = !historyVisible;
             const section = document.getElementById('history-section');
+            const mainRow = document.querySelector('.main-row');
             const icon = document.getElementById('toggle-icon');
             
             if (historyVisible) {
                 section.classList.remove('collapsed');
+                mainRow.classList.remove('expanded');
                 icon.innerHTML = '<polyline points="18 15 12 9 6 15"></polyline>';
             } else {
                 section.classList.add('collapsed');
+                mainRow.classList.add('expanded');
                 icon.innerHTML = '<polyline points="6 9 12 15 18 9"></polyline>';
             }
         }
@@ -468,9 +485,17 @@
             if (!isDragging) return;
             const clientY = e.clientY || e.touches[0].clientY;
             const delta = startY - clientY;
-            const newHeight = Math.max(50, Math.min(400, startHeight + delta));
+            const newHeight = Math.max(0, Math.min(400, startHeight + delta));
             historySection.style.flex = `0 0 ${newHeight}px`;
-            historyVisible = newHeight > 50;
+            
+            const mainRow = document.querySelector('.main-row');
+            if (newHeight < 30) {
+                mainRow.classList.add('expanded');
+                historyVisible = false;
+            } else {
+                mainRow.classList.remove('expanded');
+                historyVisible = true;
+            }
         }
 
         function endDrag() {
