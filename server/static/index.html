@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>RockTimer - Curling Tidtagning</title>
+    <title>RockTimer</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Outfit:wght@300;500;700&display=swap" rel="stylesheet">
@@ -14,7 +14,6 @@
             --bg-elevated: #1a2129;
             --accent-blue: #39bae6;
             --accent-green: #7fd962;
-            --accent-orange: #ff8f40;
             --accent-red: #f26d78;
             --accent-yellow: #e6b450;
             --text-primary: #e6e1cf;
@@ -28,115 +27,120 @@
             padding: 0;
         }
 
+        html, body {
+            height: 100%;
+            overflow: hidden;
+        }
+
         body {
             font-family: 'Outfit', sans-serif;
             background: var(--bg-dark);
             color: var(--text-primary);
-            min-height: 100vh;
-            overflow-x: hidden;
-            background-image: 
-                radial-gradient(ellipse at 20% 0%, rgba(57, 186, 230, 0.08) 0%, transparent 50%),
-                radial-gradient(ellipse at 80% 100%, rgba(127, 217, 98, 0.06) 0%, transparent 50%);
         }
 
         .container {
-            max-width: 100%;
-            padding: 1rem;
+            height: 100%;
+            padding: 8px;
             display: grid;
             grid-template-rows: auto 1fr auto;
-            min-height: 100vh;
-            gap: 1rem;
+            gap: 8px;
         }
 
+        /* Header */
         header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 0.5rem 0;
         }
 
         .logo {
             display: flex;
             align-items: center;
-            gap: 0.75rem;
+            gap: 8px;
         }
 
         .logo-icon {
-            width: 40px;
-            height: 40px;
-            background: linear-gradient(135deg, var(--accent-blue), var(--accent-green));
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
             font-size: 1.5rem;
         }
 
         .logo h1 {
-            font-size: 1.5rem;
+            font-size: 1.2rem;
             font-weight: 700;
-            background: linear-gradient(135deg, var(--accent-blue), var(--accent-green));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+            color: var(--accent-blue);
         }
 
         .status-badge {
-            padding: 0.5rem 1rem;
-            border-radius: 2rem;
-            font-size: 0.875rem;
-            font-weight: 500;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
             text-transform: uppercase;
-            letter-spacing: 0.05em;
         }
 
         .status-idle { background: var(--bg-elevated); color: var(--text-secondary); }
-        .status-armed { background: rgba(230, 180, 80, 0.2); color: var(--accent-yellow); border: 1px solid var(--accent-yellow); }
-        .status-measuring { background: rgba(57, 186, 230, 0.2); color: var(--accent-blue); border: 1px solid var(--accent-blue); animation: pulse 1s infinite; }
-        .status-completed { background: rgba(127, 217, 98, 0.2); color: var(--accent-green); border: 1px solid var(--accent-green); }
+        .status-armed { background: rgba(230, 180, 80, 0.3); color: var(--accent-yellow); border: 2px solid var(--accent-yellow); }
+        .status-measuring { background: rgba(57, 186, 230, 0.3); color: var(--accent-blue); border: 2px solid var(--accent-blue); animation: pulse 1s infinite; }
+        .status-completed { background: rgba(127, 217, 98, 0.3); color: var(--accent-green); border: 2px solid var(--accent-green); }
 
         @keyframes pulse {
             0%, 100% { opacity: 1; }
-            50% { opacity: 0.6; }
+            50% { opacity: 0.5; }
         }
 
+        /* Main content */
         main {
             display: grid;
-            grid-template-columns: 2fr 1fr;
-            gap: 1rem;
+            grid-template-columns: 1fr 140px;
+            gap: 8px;
+            min-height: 0;
         }
 
-        .card {
-            background: var(--bg-card);
-            border-radius: 1rem;
-            border: 1px solid var(--border);
-            padding: 1.25rem;
-        }
-
-        .current-times {
+        .times-section {
             display: flex;
             flex-direction: column;
-            gap: 1rem;
+            gap: 8px;
         }
 
-        .time-display {
+        /* Total tid - stor display */
+        .total-time {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 12px;
+            text-align: center;
+            border: 1px solid var(--accent-blue);
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .total-label {
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+        }
+
+        .total-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 3rem;
+            font-weight: 700;
+            color: var(--accent-green);
+            line-height: 1;
+        }
+
+        /* Deltider */
+        .split-times {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 0.75rem;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 6px;
         }
 
         .time-block {
-            background: var(--bg-elevated);
-            border-radius: 0.75rem;
-            padding: 1rem;
+            background: var(--bg-card);
+            border-radius: 8px;
+            padding: 8px;
             text-align: center;
             border: 1px solid var(--border);
-            transition: all 0.3s ease;
-        }
-
-        .time-block.active {
-            border-color: var(--accent-blue);
-            box-shadow: 0 0 20px rgba(57, 186, 230, 0.2);
         }
 
         .time-block.complete {
@@ -144,16 +148,14 @@
         }
 
         .time-label {
-            font-size: 0.75rem;
+            font-size: 0.6rem;
             color: var(--text-secondary);
             text-transform: uppercase;
-            letter-spacing: 0.1em;
-            margin-bottom: 0.5rem;
         }
 
         .time-value {
             font-family: 'JetBrains Mono', monospace;
-            font-size: 2rem;
+            font-size: 1.1rem;
             font-weight: 700;
             color: var(--accent-blue);
         }
@@ -167,48 +169,26 @@
         }
 
         .time-unit {
-            font-size: 0.875rem;
+            font-size: 0.6rem;
             color: var(--text-secondary);
-            margin-left: 0.25rem;
         }
 
-        .total-time {
-            background: linear-gradient(135deg, rgba(57, 186, 230, 0.1), rgba(127, 217, 98, 0.1));
-            border-radius: 0.75rem;
-            padding: 1.5rem;
-            text-align: center;
-            border: 1px solid var(--accent-blue);
-        }
-
-        .total-label {
-            font-size: 0.875rem;
-            color: var(--text-secondary);
-            margin-bottom: 0.5rem;
-        }
-
-        .total-value {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 3.5rem;
-            font-weight: 700;
-            background: linear-gradient(135deg, var(--accent-blue), var(--accent-green));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
+        /* Historik */
         .history-panel {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 8px;
+            border: 1px solid var(--border);
             display: flex;
             flex-direction: column;
-            gap: 0.75rem;
-            max-height: 100%;
-            overflow: hidden;
+            min-height: 0;
         }
 
         .history-title {
-            font-size: 0.875rem;
+            font-size: 0.6rem;
             color: var(--text-secondary);
             text-transform: uppercase;
-            letter-spacing: 0.1em;
+            margin-bottom: 6px;
         }
 
         .history-list {
@@ -216,19 +196,17 @@
             overflow-y: auto;
             display: flex;
             flex-direction: column;
-            gap: 0.5rem;
+            gap: 4px;
         }
 
         .history-item {
             background: var(--bg-elevated);
-            border-radius: 0.5rem;
-            padding: 0.75rem;
-            display: grid;
-            grid-template-columns: 1fr auto;
-            gap: 0.5rem;
+            border-radius: 6px;
+            padding: 6px 8px;
+            display: flex;
+            justify-content: space-between;
             align-items: center;
-            font-size: 0.875rem;
-            border: 1px solid var(--border);
+            font-size: 0.75rem;
         }
 
         .history-time {
@@ -237,138 +215,77 @@
             font-weight: 700;
         }
 
-        .history-details {
-            color: var(--text-secondary);
-            font-size: 0.75rem;
-        }
-
         .history-timestamp {
             color: var(--text-secondary);
-            font-size: 0.75rem;
+            font-size: 0.6rem;
         }
 
+        /* Knappar */
         .controls {
             display: flex;
-            gap: 1rem;
-            justify-content: center;
+            gap: 8px;
         }
 
         .btn {
-            padding: 1rem 2.5rem;
+            flex: 1;
+            padding: 14px;
             border: none;
-            border-radius: 0.75rem;
+            border-radius: 10px;
             font-family: 'Outfit', sans-serif;
-            font-size: 1.125rem;
-            font-weight: 600;
+            font-size: 1rem;
+            font-weight: 700;
             cursor: pointer;
-            transition: all 0.2s ease;
             text-transform: uppercase;
-            letter-spacing: 0.05em;
+            transition: transform 0.1s;
+        }
+
+        .btn:active {
+            transform: scale(0.98);
         }
 
         .btn-arm {
             background: linear-gradient(135deg, var(--accent-green), #5ab947);
-            color: var(--bg-dark);
-        }
-
-        .btn-arm:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 30px rgba(127, 217, 98, 0.3);
-        }
-
-        .btn-arm:disabled {
-            background: var(--bg-elevated);
-            color: var(--text-secondary);
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
+            color: #000;
         }
 
         .btn-disarm {
             background: linear-gradient(135deg, var(--accent-red), #d4525c);
-            color: white;
+            color: #fff;
         }
 
-        .btn-disarm:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 30px rgba(242, 109, 120, 0.3);
-        }
-
-        /* Touch-optimering */
-        @media (max-width: 800px) {
-            main {
-                grid-template-columns: 1fr;
-                grid-template-rows: auto auto;
-            }
-
-            .time-display {
-                grid-template-columns: 1fr;
-            }
-
-            .total-value {
-                font-size: 2.5rem;
-            }
-
-            .btn {
-                flex: 1;
-                padding: 1.25rem;
-            }
-        }
-
-        /* Scrollbar styling */
+        /* Scrollbar */
         ::-webkit-scrollbar {
-            width: 6px;
+            width: 4px;
         }
 
         ::-webkit-scrollbar-track {
             background: var(--bg-elevated);
-            border-radius: 3px;
         }
 
         ::-webkit-scrollbar-thumb {
             background: var(--border);
-            border-radius: 3px;
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background: var(--text-secondary);
-        }
-
-        /* Ice pattern overlay */
-        .ice-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            pointer-events: none;
-            background: 
-                repeating-linear-gradient(
-                    90deg,
-                    transparent,
-                    transparent 100px,
-                    rgba(57, 186, 230, 0.02) 100px,
-                    rgba(57, 186, 230, 0.02) 101px
-                );
-            z-index: -1;
+            border-radius: 2px;
         }
     </style>
 </head>
 <body>
-    <div class="ice-overlay"></div>
-    
     <div class="container">
         <header>
             <div class="logo">
-                <div class="logo-icon">🥌</div>
+                <span class="logo-icon">🥌</span>
                 <h1>RockTimer</h1>
             </div>
             <div id="status-badge" class="status-badge status-idle">Redo</div>
         </header>
 
         <main>
-            <div class="card current-times">
-                <div class="time-display">
+            <div class="times-section">
+                <div class="total-time">
+                    <div class="total-label">Total Tid</div>
+                    <div class="total-value" id="value-total">--</div>
+                </div>
+
+                <div class="split-times">
                     <div class="time-block" id="time-tee-hog">
                         <div class="time-label">Tee → Hog</div>
                         <div class="time-value waiting" id="value-tee-hog">--<span class="time-unit">ms</span></div>
@@ -377,34 +294,18 @@
                         <div class="time-label">Hog → Hog</div>
                         <div class="time-value waiting" id="value-hog-hog">--<span class="time-unit">ms</span></div>
                     </div>
-                    <div class="time-block" id="time-split">
-                        <div class="time-label">Split</div>
-                        <div class="time-value waiting" id="value-split">--<span class="time-unit">s</span></div>
-                    </div>
                 </div>
-
-                <div class="total-time">
-                    <div class="total-label">Total Tid</div>
-                    <div class="total-value" id="value-total">--</div>
-                </div>
-
             </div>
 
-            <div class="card history-panel">
-                <div class="history-title">Tidigare Tider</div>
-                <div class="history-list" id="history-list">
-                    <!-- Fylls dynamiskt -->
-                </div>
+            <div class="history-panel">
+                <div class="history-title">Historik</div>
+                <div class="history-list" id="history-list"></div>
             </div>
         </main>
 
         <div class="controls">
-            <button class="btn btn-arm" id="btn-arm" onclick="armSystem()">
-                Arma System
-            </button>
-            <button class="btn btn-disarm" id="btn-disarm" onclick="disarmSystem()" style="display: none;">
-                Avbryt
-            </button>
+            <button class="btn btn-arm" id="btn-arm" onclick="armSystem()">Arma</button>
+            <button class="btn btn-disarm" id="btn-disarm" onclick="disarmSystem()" style="display: none;">Avbryt</button>
         </div>
     </div>
 
@@ -412,14 +313,11 @@
         let ws = null;
         let currentState = 'idle';
 
-        // WebSocket-anslutning
         function connectWebSocket() {
             const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
             ws = new WebSocket(`${protocol}//${window.location.host}/ws`);
 
-            ws.onopen = () => {
-                console.log('WebSocket ansluten');
-            };
+            ws.onopen = () => console.log('WebSocket ansluten');
 
             ws.onmessage = (event) => {
                 const message = JSON.parse(event.data);
@@ -432,17 +330,11 @@
                 console.log('WebSocket stängd, återansluter...');
                 setTimeout(connectWebSocket, 2000);
             };
-
-            ws.onerror = (error) => {
-                console.error('WebSocket-fel:', error);
-            };
         }
 
-        // Uppdatera UI baserat på tillstånd
         function updateUI(data) {
             currentState = data.state;
             const session = data.session;
-            const sensors = data.sensors;
 
             // Status badge
             const statusBadge = document.getElementById('status-badge');
@@ -459,29 +351,13 @@
             // Tidsvärden
             updateTimeValue('value-tee-hog', session.tee_to_hog_close_ms, 'ms');
             updateTimeValue('value-hog-hog', session.hog_to_hog_ms, 'ms');
-            
-            // Split time (hog-to-hog i sekunder)
-            const splitEl = document.getElementById('value-split');
-            if (session.hog_to_hog_ms) {
-                const splitSec = (session.hog_to_hog_ms / 1000).toFixed(2);
-                splitEl.innerHTML = `${splitSec}<span class="time-unit">s</span>`;
-                splitEl.classList.remove('waiting');
-                splitEl.classList.add('complete');
-            } else {
-                splitEl.innerHTML = `--<span class="time-unit">s</span>`;
-                splitEl.classList.add('waiting');
-                splitEl.classList.remove('complete');
-            }
 
             // Total
             const totalEl = document.getElementById('value-total');
             if (session.total_ms) {
-                const totalSec = (session.total_ms / 1000).toFixed(2);
-                totalEl.textContent = `${totalSec}s`;
+                totalEl.textContent = (session.total_ms / 1000).toFixed(2) + 's';
             } else if (session.tee_to_hog_close_ms) {
-                // Visa tee→hog som "total" om stenen inte nådde hog_far
-                const teeHogSec = (session.tee_to_hog_close_ms / 1000).toFixed(2);
-                totalEl.textContent = `${teeHogSec}s`;
+                totalEl.textContent = (session.tee_to_hog_close_ms / 1000).toFixed(2) + 's';
             } else {
                 totalEl.textContent = '--';
             }
@@ -492,22 +368,21 @@
 
             if (currentState === 'idle' || currentState === 'completed') {
                 btnArm.style.display = 'block';
-                btnArm.disabled = false;
                 btnDisarm.style.display = 'none';
             } else {
                 btnArm.style.display = 'none';
                 btnDisarm.style.display = 'block';
             }
 
-            // Markera aktiva tidsblock
-            updateTimeBlockStatus('time-tee-hog', session.tee_to_hog_close_ms !== null);
-            updateTimeBlockStatus('time-hog-hog', session.hog_to_hog_ms !== null);
+            // Markera kompletta tidsblock
+            document.getElementById('time-tee-hog').classList.toggle('complete', session.tee_to_hog_close_ms !== null);
+            document.getElementById('time-hog-hog').classList.toggle('complete', session.hog_to_hog_ms !== null);
         }
 
         function updateTimeValue(elementId, value, unit) {
             const element = document.getElementById(elementId);
             if (value !== null && value !== undefined) {
-                element.innerHTML = `${value.toFixed(1)}<span class="time-unit">${unit}</span>`;
+                element.innerHTML = `${value.toFixed(0)}<span class="time-unit">${unit}</span>`;
                 element.classList.remove('waiting');
                 element.classList.add('complete');
             } else {
@@ -517,23 +392,9 @@
             }
         }
 
-        function updateTimeBlockStatus(elementId, isComplete) {
-            const element = document.getElementById(elementId);
-            if (isComplete) {
-                element.classList.add('complete');
-                element.classList.remove('active');
-            } else if (currentState === 'measuring') {
-                element.classList.add('active');
-                element.classList.remove('complete');
-            } else {
-                element.classList.remove('active', 'complete');
-            }
-        }
-
-        // Hämta historik
         async function loadHistory() {
             try {
-                const response = await fetch('/api/times?limit=20');
+                const response = await fetch('/api/times?limit=10');
                 const times = await response.json();
                 
                 const historyList = document.getElementById('history-list');
@@ -543,23 +404,15 @@
                     const item = document.createElement('div');
                     item.className = 'history-item';
                     
-                    // Visa total om den finns, annars tee→hog
                     const mainTime = record.total_ms 
                         ? (record.total_ms / 1000).toFixed(2) + 's'
                         : (record.tee_to_hog_close_ms / 1000).toFixed(2) + 's*';
                     
-                    const splitText = record.hog_to_hog_ms 
-                        ? `Split: ${(record.hog_to_hog_ms / 1000).toFixed(2)}s`
-                        : 'Nådde ej hog';
-                    
-                    const timestamp = new Date(record.timestamp).toLocaleTimeString('sv-SE');
+                    const timestamp = new Date(record.timestamp).toLocaleTimeString('sv-SE', {hour: '2-digit', minute: '2-digit'});
                     
                     item.innerHTML = `
-                        <div>
-                            <div class="history-time">${mainTime}</div>
-                            <div class="history-details">${splitText}</div>
-                        </div>
-                        <div class="history-timestamp">${timestamp}</div>
+                        <span class="history-time">${mainTime}</span>
+                        <span class="history-timestamp">${timestamp}</span>
                     `;
                     
                     historyList.appendChild(item);
@@ -569,7 +422,6 @@
             }
         }
 
-        // Arma systemet
         async function armSystem() {
             if (ws && ws.readyState === WebSocket.OPEN) {
                 ws.send(JSON.stringify({ type: 'arm' }));
@@ -578,7 +430,6 @@
             }
         }
 
-        // Avaktivera systemet
         async function disarmSystem() {
             if (ws && ws.readyState === WebSocket.OPEN) {
                 ws.send(JSON.stringify({ type: 'disarm' }));
@@ -587,15 +438,11 @@
             }
         }
 
-        // Initiera
         document.addEventListener('DOMContentLoaded', () => {
             connectWebSocket();
             loadHistory();
-            
-            // Uppdatera historik regelbundet
             setInterval(loadHistory, 5000);
         });
     </script>
 </body>
 </html>
-
