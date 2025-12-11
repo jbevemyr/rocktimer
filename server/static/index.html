@@ -23,7 +23,7 @@
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
             background: #f5f5f7;
             color: #1d1d1f;
-            padding: 16px;
+            padding: 12px;
         }
 
         .container {
@@ -35,16 +35,16 @@
         header {
             display: flex;
             align-items: center;
-            gap: 12px;
-            margin-bottom: 16px;
+            gap: 10px;
+            margin-bottom: 12px;
         }
 
         .logo {
-            font-size: 1.8rem;
+            font-size: 1.6rem;
         }
 
         h1 {
-            font-size: 1.5rem;
+            font-size: 1.3rem;
             font-weight: 600;
         }
 
@@ -65,77 +65,90 @@
             50% { opacity: 0.6; transform: scale(1.1); }
         }
 
-        /* Time cards */
-        .time-cards {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
+        /* Main row: times + button */
+        .main-row {
+            display: flex;
             gap: 12px;
             margin-bottom: 12px;
+            align-items: stretch;
         }
 
+        /* Combined time card */
         .time-card {
+            flex: 1;
             padding: 16px 20px;
             border-radius: 16px;
+            background: linear-gradient(135deg, #5a7dfe 0%, #9333ea 100%);
             color: white;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
         }
 
-        .time-card.tee-hog {
-            background: linear-gradient(135deg, #5a7dfe 0%, #4a6cf5 100%);
-        }
-
-        .time-card.hog-hog {
-            background: linear-gradient(135deg, #a855f7 0%, #9333ea 100%);
-        }
-
-        .time-label {
-            font-size: 0.9rem;
+        .time-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
             font-weight: 500;
-            opacity: 0.9;
+            opacity: 0.85;
             margin-bottom: 4px;
         }
 
+        .time-values {
+            display: flex;
+            align-items: baseline;
+            justify-content: center;
+            gap: 8px;
+        }
+
         .time-value {
-            font-size: 2.8rem;
+            font-size: 3.2rem;
             font-weight: 700;
             letter-spacing: -0.02em;
         }
 
         .time-value.waiting {
-            opacity: 0.5;
+            opacity: 0.4;
+        }
+
+        .time-separator {
+            font-size: 2rem;
+            font-weight: 300;
+            opacity: 0.6;
         }
 
         /* Rearm button */
         .btn-rearm {
-            width: 100%;
-            padding: 16px;
+            width: 90px;
+            min-width: 90px;
             border: none;
-            border-radius: 12px;
+            border-radius: 16px;
             background: linear-gradient(135deg, #34c759 0%, #30b350 100%);
             color: white;
             font-family: inherit;
-            font-size: 1.1rem;
+            font-size: 0.9rem;
             font-weight: 600;
             cursor: pointer;
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
-            gap: 8px;
-            margin-bottom: 16px;
+            gap: 6px;
             transition: transform 0.1s, opacity 0.1s;
         }
 
         .btn-rearm:active {
-            transform: scale(0.98);
+            transform: scale(0.96);
         }
 
         .btn-rearm:disabled {
-            opacity: 0.6;
+            opacity: 0.5;
             cursor: not-allowed;
         }
 
         .btn-rearm svg {
-            width: 20px;
-            height: 20px;
+            width: 28px;
+            height: 28px;
         }
 
         /* History section */
@@ -143,29 +156,29 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            margin-bottom: 12px;
-            padding-top: 12px;
+            margin-bottom: 8px;
+            padding-top: 8px;
             border-top: 1px solid #d2d2d7;
         }
 
         .history-header h2 {
-            font-size: 1.1rem;
+            font-size: 1rem;
             font-weight: 600;
         }
 
         .btn-clear {
-            padding: 8px 16px;
+            padding: 6px 12px;
             border: none;
             border-radius: 8px;
             background: #ff3b30;
             color: white;
             font-family: inherit;
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             font-weight: 600;
             cursor: pointer;
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 4px;
             transition: transform 0.1s;
         }
 
@@ -174,27 +187,33 @@
         }
 
         .btn-clear svg {
-            width: 16px;
-            height: 16px;
+            width: 14px;
+            height: 14px;
         }
 
         /* History table */
+        .history-wrapper {
+            max-height: 220px;
+            overflow-y: auto;
+        }
+
         .history-table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 0.95rem;
+            font-size: 1.1rem;
         }
 
         .history-table th {
             text-align: left;
-            padding: 10px 8px;
-            font-weight: 500;
+            padding: 8px 6px;
+            font-weight: 600;
             color: #86868b;
             border-bottom: 1px solid #d2d2d7;
+            font-size: 0.95rem;
         }
 
         .history-table td {
-            padding: 12px 8px;
+            padding: 10px 6px;
             border-bottom: 1px solid #e5e5e7;
         }
 
@@ -204,35 +223,31 @@
 
         .history-table .time-col {
             color: #86868b;
+            font-size: 1rem;
         }
 
         .history-table .tee-hog-col {
             color: #5a7dfe;
-            font-weight: 600;
+            font-weight: 700;
             font-family: 'SF Mono', 'Menlo', monospace;
         }
 
         .history-table .hog-hog-col {
             color: #9333ea;
-            font-weight: 600;
+            font-weight: 700;
             font-family: 'SF Mono', 'Menlo', monospace;
         }
 
         .empty-history {
             text-align: center;
-            padding: 24px;
+            padding: 20px;
             color: #86868b;
-        }
-
-        /* Scrollable history on small screens */
-        .history-wrapper {
-            max-height: 200px;
-            overflow-y: auto;
+            font-size: 1rem;
         }
 
         @media (max-height: 500px) {
             .history-wrapper {
-                max-height: 120px;
+                max-height: 140px;
             }
         }
     </style>
@@ -245,24 +260,27 @@
             <div class="status-dot" id="status-dot" title="Status"></div>
         </header>
 
-        <div class="time-cards">
-            <div class="time-card tee-hog">
-                <div class="time-label">Tee-Hog</div>
-                <div class="time-value waiting" id="value-tee-hog">--s</div>
+        <div class="main-row">
+            <div class="time-card">
+                <div class="time-labels">
+                    <span>Tee-Hog</span>
+                    <span>Hog-Hog</span>
+                </div>
+                <div class="time-values">
+                    <span class="time-value waiting" id="value-tee-hog">--</span>
+                    <span class="time-separator">/</span>
+                    <span class="time-value waiting" id="value-hog-hog">--</span>
+                </div>
             </div>
-            <div class="time-card hog-hog">
-                <div class="time-label">Hog-Hog</div>
-                <div class="time-value waiting" id="value-hog-hog">--s</div>
-            </div>
-        </div>
 
-        <button class="btn-rearm" id="btn-rearm" onclick="armSystem()">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M1 4v6h6"></path>
-                <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
-            </svg>
-            Rearm
-        </button>
+            <button class="btn-rearm" id="btn-rearm" onclick="armSystem()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M1 4v6h6"></path>
+                    <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+                </svg>
+                Rearm
+            </button>
+        </div>
 
         <div class="history-header">
             <h2>History</h2>
@@ -330,7 +348,7 @@
                 teeHogEl.textContent = seconds + 's';
                 teeHogEl.classList.remove('waiting');
             } else {
-                teeHogEl.textContent = '--s';
+                teeHogEl.textContent = '--';
                 teeHogEl.classList.add('waiting');
             }
 
@@ -341,7 +359,7 @@
                 hogHogEl.textContent = seconds + 's';
                 hogHogEl.classList.remove('waiting');
             } else {
-                hogHogEl.textContent = '--s';
+                hogHogEl.textContent = '--';
                 hogHogEl.classList.add('waiting');
             }
 
