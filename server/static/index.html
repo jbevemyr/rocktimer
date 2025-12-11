@@ -397,7 +397,7 @@
             document.getElementById('status-dot').className = 'status-dot ' + currentState;
 
             const teeHogEl = document.getElementById('value-tee-hog');
-            if (session.tee_to_hog_close_ms !== null) {
+            if (session.tee_to_hog_close_ms != null && session.tee_to_hog_close_ms > 0) {
                 teeHogEl.textContent = (session.tee_to_hog_close_ms / 1000).toFixed(2);
                 teeHogEl.classList.remove('waiting');
             } else {
@@ -406,7 +406,7 @@
             }
 
             const hogHogEl = document.getElementById('value-hog-hog');
-            if (session.hog_to_hog_ms !== null) {
+            if (session.hog_to_hog_ms != null && session.hog_to_hog_ms > 0) {
                 hogHogEl.textContent = (session.hog_to_hog_ms / 1000).toFixed(2);
                 hogHogEl.classList.remove('waiting');
             } else {
@@ -428,9 +428,9 @@
                     }
                     tbody.innerHTML = data.map(record => {
                         const time = record.timestamp ? new Date(record.timestamp).toLocaleTimeString('sv-SE') : '--';
-                        const teeHog = record.tee_to_hog_close_ms !== null 
+                        const teeHog = (record.tee_to_hog_close_ms != null && record.tee_to_hog_close_ms > 0)
                             ? (record.tee_to_hog_close_ms / 1000).toFixed(2) : '--';
-                        const hogHog = record.hog_to_hog_ms !== null 
+                        const hogHog = (record.hog_to_hog_ms != null && record.hog_to_hog_ms > 0)
                             ? (record.hog_to_hog_ms / 1000).toFixed(2) : '--';
                         return `<tr>
                             <td class="time-col">${time}</td>
@@ -519,7 +519,14 @@
         document.addEventListener('touchend', endDrag);
 
         setInterval(loadHistory, 3000);
+        function loadStatus() {
+            fetch('/api/status')
+                .then(r => r.json())
+                .then(data => updateState(data));
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
+            loadStatus();
             connectWebSocket();
             loadHistory();
         });
