@@ -324,9 +324,14 @@ class RockTimerServer:
             voice_path = '/opt/piper/voices/en_US-lessac-medium.onnx'
             
             if os.path.exists(piper_path) and os.path.exists(voice_path):
-                # Piper: echo text | piper | aplay
-                cmd = f'echo "{text}" | {piper_path} --model {voice_path} --output-raw | aplay -r 22050 -f S16_LE -c 1 -D plughw:2,0 -q'
-                subprocess.Popen(cmd, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                # Piper: använd bash -c för att köra pipen korrekt
+                cmd = f'echo "{text}" | {piper_path} --model {voice_path} --output-raw 2>/dev/null | aplay -r 22050 -f S16_LE -c 1 -D plughw:2,0 -q 2>/dev/null'
+                subprocess.Popen(
+                    ['/bin/bash', '-c', cmd],
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                    start_new_session=True
+                )
             else:
                 # Fallback till espeak-ng
                 env = {'ALSA_CARD': '2', 'HOME': '/root'}
