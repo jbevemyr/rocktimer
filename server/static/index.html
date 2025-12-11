@@ -16,25 +16,26 @@
 
         html, body {
             height: 100%;
-            overflow-x: hidden;
+            overflow: hidden;
         }
 
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
             background: #f5f5f7;
             color: #1d1d1f;
-            padding: 12px;
+            padding: 10px;
             display: flex;
             flex-direction: column;
         }
 
         .container {
-            max-width: 900px;
-            margin: 0 auto;
-            width: 100%;
             flex: 1;
             display: flex;
             flex-direction: column;
+            max-width: 900px;
+            margin: 0 auto;
+            width: 100%;
+            min-height: 0;
         }
 
         /* Header */
@@ -42,17 +43,12 @@
             display: flex;
             align-items: center;
             gap: 10px;
-            margin-bottom: 12px;
+            margin-bottom: 10px;
+            flex-shrink: 0;
         }
 
-        .logo {
-            font-size: 1.6rem;
-        }
-
-        h1 {
-            font-size: 1.3rem;
-            font-weight: 600;
-        }
+        .logo { font-size: 1.5rem; }
+        h1 { font-size: 1.2rem; font-weight: 600; }
 
         .status-dot {
             width: 12px;
@@ -61,7 +57,6 @@
             margin-left: auto;
             background: #86868b;
         }
-
         .status-dot.armed { background: #34c759; animation: pulse 1.5s infinite; }
         .status-dot.measuring { background: #007aff; animation: pulse 0.5s infinite; }
         .status-dot.completed { background: #34c759; }
@@ -71,186 +66,216 @@
             50% { opacity: 0.6; transform: scale(1.1); }
         }
 
-        /* Main row: times + button */
+        /* Main row */
         .main-row {
             display: flex;
-            gap: 12px;
-            margin-bottom: 12px;
-            align-items: stretch;
+            gap: 10px;
+            margin-bottom: 10px;
+            flex-shrink: 0;
         }
 
-        /* Combined time card */
+        .time-cards {
+            flex: 1;
+            display: flex;
+            gap: 10px;
+        }
+
         .time-card {
             flex: 1;
-            padding: 16px 20px;
-            border-radius: 16px;
-            background: linear-gradient(135deg, #5a7dfe 0%, #9333ea 100%);
+            padding: 14px 16px;
+            border-radius: 14px;
             color: white;
             display: flex;
             flex-direction: column;
             justify-content: center;
         }
 
-        .time-labels {
-            display: flex;
-            justify-content: space-between;
+        .time-card.tee-hog {
+            background: linear-gradient(135deg, #5a7dfe 0%, #4a6cf5 100%);
+        }
+
+        .time-card.hog-hog {
+            background: linear-gradient(135deg, #a855f7 0%, #9333ea 100%);
+        }
+
+        .time-label {
             font-size: 0.85rem;
             font-weight: 500;
             opacity: 0.85;
-            margin-bottom: 4px;
-        }
-
-        .time-values {
-            display: flex;
-            align-items: baseline;
-            justify-content: center;
-            gap: 8px;
+            margin-bottom: 2px;
         }
 
         .time-value {
-            font-size: 3.2rem;
+            font-size: 2.8rem;
             font-weight: 700;
             letter-spacing: -0.02em;
         }
 
-        .time-value.waiting {
-            opacity: 0.4;
-        }
-
-        .time-separator {
-            font-size: 2rem;
-            font-weight: 300;
-            opacity: 0.6;
-        }
+        .time-value.waiting { opacity: 0.4; }
 
         /* Rearm button */
         .btn-rearm {
-            width: 90px;
-            min-width: 90px;
+            width: 80px;
+            min-width: 80px;
             border: none;
-            border-radius: 16px;
+            border-radius: 14px;
             background: linear-gradient(135deg, #34c759 0%, #30b350 100%);
             color: white;
             font-family: inherit;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             font-weight: 600;
             cursor: pointer;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            gap: 6px;
+            gap: 4px;
             transition: transform 0.1s, opacity 0.1s;
         }
 
-        .btn-rearm:active {
-            transform: scale(0.96);
-        }
+        .btn-rearm:active { transform: scale(0.96); }
+        .btn-rearm:disabled { opacity: 0.5; cursor: not-allowed; }
+        .btn-rearm svg { width: 24px; height: 24px; }
 
-        .btn-rearm:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        .btn-rearm svg {
-            width: 28px;
-            height: 28px;
-        }
-
-        /* History section */
-        .history-header {
+        /* Resizable divider */
+        .divider {
             display: flex;
             align-items: center;
-            justify-content: space-between;
-            margin-bottom: 8px;
-            padding-top: 8px;
-            border-top: 1px solid #d2d2d7;
+            gap: 8px;
+            padding: 6px 0;
+            flex-shrink: 0;
+            cursor: ns-resize;
+            user-select: none;
+            touch-action: none;
         }
 
-        .history-header h2 {
-            font-size: 1rem;
-            font-weight: 600;
+        .divider-line {
+            flex: 1;
+            height: 2px;
+            background: #d2d2d7;
+            border-radius: 1px;
         }
+
+        .divider-handle {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            background: #e5e5e7;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            color: #86868b;
+            font-weight: 500;
+        }
+
+        .divider-handle svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        .btn-toggle {
+            background: none;
+            border: none;
+            padding: 4px;
+            cursor: pointer;
+            color: #86868b;
+            display: flex;
+            align-items: center;
+            transition: color 0.2s;
+        }
+
+        .btn-toggle:hover { color: #1d1d1f; }
+        .btn-toggle svg { width: 18px; height: 18px; }
 
         .btn-clear {
-            padding: 6px 12px;
+            padding: 4px 10px;
             border: none;
             border-radius: 8px;
             background: #ff3b30;
             color: white;
             font-family: inherit;
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             font-weight: 600;
             cursor: pointer;
             display: flex;
             align-items: center;
             gap: 4px;
-            transition: transform 0.1s;
         }
 
-        .btn-clear:active {
-            transform: scale(0.95);
+        .btn-clear:active { transform: scale(0.95); }
+        .btn-clear svg { width: 12px; height: 12px; }
+
+        /* History section */
+        .history-section {
+            flex: 1;
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            transition: flex 0.3s ease;
         }
 
-        .btn-clear svg {
-            width: 14px;
-            height: 14px;
+        .history-section.collapsed {
+            flex: 0 0 0;
+            min-height: 0;
+            overflow: hidden;
         }
 
-        /* History table */
         .history-wrapper {
             flex: 1;
             overflow-y: auto;
+            min-height: 0;
         }
 
         .history-table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 1.2rem;
+            font-size: 1.15rem;
         }
 
         .history-table th {
             text-align: left;
-            padding: 10px 8px;
+            padding: 8px 6px;
             font-weight: 600;
             color: #86868b;
             border-bottom: 2px solid #d2d2d7;
-            font-size: 1rem;
+            font-size: 0.95rem;
+            position: sticky;
+            top: 0;
+            background: #f5f5f7;
         }
 
         .history-table td {
-            padding: 12px 8px;
+            padding: 10px 6px;
             border-bottom: 1px solid #e5e5e7;
         }
 
-        .history-table tr:last-child td {
-            border-bottom: none;
-        }
+        .history-table tr:last-child td { border-bottom: none; }
 
         .history-table .time-col {
             color: #86868b;
-            font-size: 1.1rem;
+            font-size: 1rem;
         }
 
         .history-table .tee-hog-col {
             color: #5a7dfe;
             font-weight: 700;
-            font-size: 1.25rem;
+            font-size: 1.2rem;
             font-family: 'SF Mono', 'Menlo', monospace;
         }
 
         .history-table .hog-hog-col {
             color: #9333ea;
             font-weight: 700;
-            font-size: 1.25rem;
+            font-size: 1.2rem;
             font-family: 'SF Mono', 'Menlo', monospace;
         }
 
         .empty-history {
             text-align: center;
-            padding: 24px;
+            padding: 20px;
             color: #86868b;
-            font-size: 1.1rem;
+            font-size: 1rem;
         }
     </style>
 </head>
@@ -263,18 +288,16 @@
         </header>
 
         <div class="main-row">
-            <div class="time-card">
-                <div class="time-labels">
-                    <span>Tee-Hog</span>
-                    <span>Hog-Hog</span>
+            <div class="time-cards">
+                <div class="time-card tee-hog">
+                    <div class="time-label">Tee-Hog</div>
+                    <div class="time-value waiting" id="value-tee-hog">--</div>
                 </div>
-                <div class="time-values">
-                    <span class="time-value waiting" id="value-tee-hog">--</span>
-                    <span class="time-separator">/</span>
-                    <span class="time-value waiting" id="value-hog-hog">--</span>
+                <div class="time-card hog-hog">
+                    <div class="time-label">Hog-Hog</div>
+                    <div class="time-value waiting" id="value-hog-hog">--</div>
                 </div>
             </div>
-
             <button class="btn-rearm" id="btn-rearm" onclick="armSystem()">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M1 4v6h6"></path>
@@ -284,51 +307,61 @@
             </button>
         </div>
 
-        <div class="history-header">
-            <h2>History</h2>
+        <div class="divider" id="divider">
+            <div class="divider-line"></div>
+            <div class="divider-handle">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="5" y1="9" x2="19" y2="9"></line>
+                    <line x1="5" y1="15" x2="19" y2="15"></line>
+                </svg>
+                History
+            </div>
+            <button class="btn-toggle" id="btn-toggle" onclick="toggleHistory()" title="Visa/Göm historik">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" id="toggle-icon">
+                    <polyline points="18 15 12 9 6 15"></polyline>
+                </svg>
+            </button>
             <button class="btn-clear" onclick="clearHistory()">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M3 6h18"></path>
                     <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
-                    <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
                 </svg>
                 Clear
             </button>
+            <div class="divider-line"></div>
         </div>
 
-        <div class="history-wrapper">
-            <table class="history-table">
-                <thead>
-                    <tr>
-                        <th>Time</th>
-                        <th>Tee-Hog</th>
-                        <th>Hog-Hog</th>
-                    </tr>
-                </thead>
-                <tbody id="history-body">
-                    <tr><td colspan="3" class="empty-history">No measurements yet</td></tr>
-                </tbody>
-            </table>
+        <div class="history-section" id="history-section">
+            <div class="history-wrapper">
+                <table class="history-table">
+                    <thead>
+                        <tr>
+                            <th>Time</th>
+                            <th>Tee-Hog</th>
+                            <th>Hog-Hog</th>
+                        </tr>
+                    </thead>
+                    <tbody id="history-body">
+                        <tr><td colspan="3" class="empty-history">No measurements yet</td></tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 
     <script>
         let ws = null;
         let currentState = 'idle';
+        let historyVisible = true;
 
         function connectWebSocket() {
             const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
             ws = new WebSocket(`${protocol}//${window.location.host}/ws`);
-
             ws.onopen = () => console.log('WebSocket connected');
-
             ws.onmessage = (event) => {
                 const message = JSON.parse(event.data);
-                if (message.type === 'state_update') {
-                    updateState(message.data);
-                }
+                if (message.type === 'state_update') updateState(message.data);
             };
-
             ws.onclose = () => {
                 console.log('WebSocket closed, reconnecting...');
                 setTimeout(connectWebSocket, 2000);
@@ -339,43 +372,31 @@
             currentState = data.state;
             const session = data.session;
 
-            // Status dot
-            const statusDot = document.getElementById('status-dot');
-            statusDot.className = 'status-dot ' + currentState;
+            document.getElementById('status-dot').className = 'status-dot ' + currentState;
 
-            // Tee-Hog
             const teeHogEl = document.getElementById('value-tee-hog');
             if (session.tee_to_hog_close_ms !== null) {
-                const seconds = (session.tee_to_hog_close_ms / 1000).toFixed(2);
-                teeHogEl.textContent = seconds + 's';
+                teeHogEl.textContent = (session.tee_to_hog_close_ms / 1000).toFixed(2) + 's';
                 teeHogEl.classList.remove('waiting');
             } else {
                 teeHogEl.textContent = '--';
                 teeHogEl.classList.add('waiting');
             }
 
-            // Hog-Hog
             const hogHogEl = document.getElementById('value-hog-hog');
             if (session.hog_to_hog_ms !== null) {
-                const seconds = (session.hog_to_hog_ms / 1000).toFixed(2);
-                hogHogEl.textContent = seconds + 's';
+                hogHogEl.textContent = (session.hog_to_hog_ms / 1000).toFixed(2) + 's';
                 hogHogEl.classList.remove('waiting');
             } else {
                 hogHogEl.textContent = '--';
                 hogHogEl.classList.add('waiting');
             }
 
-            // Button state
-            const btn = document.getElementById('btn-rearm');
-            if (currentState === 'measuring') {
-                btn.disabled = true;
-            } else {
-                btn.disabled = false;
-            }
+            document.getElementById('btn-rearm').disabled = (currentState === 'measuring');
         }
 
         function loadHistory() {
-            fetch('/api/times?limit=10')
+            fetch('/api/times?limit=15')
                 .then(r => r.json())
                 .then(data => {
                     const tbody = document.getElementById('history-body');
@@ -383,15 +404,12 @@
                         tbody.innerHTML = '<tr><td colspan="3" class="empty-history">No measurements yet</td></tr>';
                         return;
                     }
-
                     tbody.innerHTML = data.map(record => {
                         const time = record.timestamp ? new Date(record.timestamp).toLocaleTimeString('sv-SE') : '--';
                         const teeHog = record.tee_to_hog_close_ms !== null 
-                            ? (record.tee_to_hog_close_ms / 1000).toFixed(2) + 's' 
-                            : '--';
+                            ? (record.tee_to_hog_close_ms / 1000).toFixed(2) + 's' : '--';
                         const hogHog = record.hog_to_hog_ms !== null 
-                            ? (record.hog_to_hog_ms / 1000).toFixed(2) + 's' 
-                            : '--';
+                            ? (record.hog_to_hog_ms / 1000).toFixed(2) + 's' : '--';
                         return `<tr>
                             <td class="time-col">${time}</td>
                             <td class="tee-hog-col">${teeHog}</td>
@@ -416,9 +434,58 @@
             }
         }
 
-        // Poll history
-        setInterval(loadHistory, 3000);
+        function toggleHistory() {
+            historyVisible = !historyVisible;
+            const section = document.getElementById('history-section');
+            const icon = document.getElementById('toggle-icon');
+            
+            if (historyVisible) {
+                section.classList.remove('collapsed');
+                icon.innerHTML = '<polyline points="18 15 12 9 6 15"></polyline>';
+            } else {
+                section.classList.add('collapsed');
+                icon.innerHTML = '<polyline points="6 9 12 15 18 9"></polyline>';
+            }
+        }
 
+        // Drag to resize
+        let isDragging = false;
+        let startY = 0;
+        let startHeight = 0;
+        const divider = document.getElementById('divider');
+        const historySection = document.getElementById('history-section');
+
+        function startDrag(e) {
+            if (e.target.closest('button')) return;
+            isDragging = true;
+            startY = e.clientY || e.touches[0].clientY;
+            startHeight = historySection.offsetHeight;
+            document.body.style.cursor = 'ns-resize';
+            e.preventDefault();
+        }
+
+        function doDrag(e) {
+            if (!isDragging) return;
+            const clientY = e.clientY || e.touches[0].clientY;
+            const delta = startY - clientY;
+            const newHeight = Math.max(50, Math.min(400, startHeight + delta));
+            historySection.style.flex = `0 0 ${newHeight}px`;
+            historyVisible = newHeight > 50;
+        }
+
+        function endDrag() {
+            isDragging = false;
+            document.body.style.cursor = '';
+        }
+
+        divider.addEventListener('mousedown', startDrag);
+        divider.addEventListener('touchstart', startDrag);
+        document.addEventListener('mousemove', doDrag);
+        document.addEventListener('touchmove', doDrag);
+        document.addEventListener('mouseup', endDrag);
+        document.addEventListener('touchend', endDrag);
+
+        setInterval(loadHistory, 3000);
         document.addEventListener('DOMContentLoaded', () => {
             connectWebSocket();
             loadHistory();
