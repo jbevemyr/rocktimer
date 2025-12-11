@@ -14,3 +14,4 @@ server:
   port: 5000          # UDP-port
   http_port: 8080     # Webb-UI (endast Pi 4)
   udp_port: 5000      # Samma som port (endast Pi 4)
+  enable_speech: true # Läs upp tider med espeak-ng
