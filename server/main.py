@@ -318,14 +318,20 @@ class RockTimerServer:
             
             logger.info(f"Läser upp: '{text}'")
             
-            # Kör espeak-ng i bakgrunden
+            # Kör espeak-ng i bakgrunden (använd full sökväg)
+            espeak_path = '/usr/bin/espeak-ng'
+            env = {
+                'ALSA_CARD': '2',  # Headphones
+                'HOME': '/root'
+            }
             subprocess.Popen(
-                ['espeak-ng', '-v', 'sv', '-s', '150', text],
+                [espeak_path, '-v', 'sv', '-s', '150', text],
                 stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL
+                stderr=subprocess.DEVNULL,
+                env=env
             )
         except FileNotFoundError:
-            logger.warning("espeak-ng ej installerat - kan inte läsa upp tid")
+            logger.warning("espeak-ng ej installerat på /usr/bin/espeak-ng")
         except Exception as e:
             logger.error(f"TTS-fel: {e}")
     
