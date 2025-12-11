@@ -3,24 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>RockTimer</title>
+    <title>Curling Stone Timer</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Outfit:wght@300;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --bg-dark: #0a0e14;
-            --bg-card: #131920;
-            --bg-elevated: #1a2129;
-            --accent-blue: #39bae6;
-            --accent-green: #7fd962;
-            --accent-red: #f26d78;
-            --accent-yellow: #e6b450;
-            --text-primary: #e6e1cf;
-            --text-secondary: #626a73;
-            --border: #2a333d;
-        }
-
         * {
             box-sizing: border-box;
             margin: 0;
@@ -29,178 +16,279 @@
 
         html, body {
             height: 100%;
-            overflow: hidden;
+            overflow-x: hidden;
         }
 
         body {
-            font-family: 'Outfit', sans-serif;
-            background: var(--bg-dark);
-            color: var(--text-primary);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #f5f5f7;
+            color: #1d1d1f;
+            padding: 16px;
         }
 
         .container {
-            height: 100%;
-            padding: 8px;
-            display: grid;
-            grid-template-rows: auto 1fr auto;
-            gap: 8px;
+            max-width: 900px;
+            margin: 0 auto;
         }
 
         /* Header */
         header {
             display: flex;
-            justify-content: space-between;
             align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
         }
 
         .logo {
-            display: flex;
-            align-items: center;
-            gap: 8px;
+            font-size: 1.8rem;
         }
 
-        .logo-icon {
+        h1 {
             font-size: 1.5rem;
-        }
-
-        .logo h1 {
-            font-size: 1.2rem;
-            font-weight: 700;
-            color: var(--accent-blue);
-        }
-
-        .status-badge {
-            padding: 6px 16px;
-            border-radius: 20px;
-            font-size: 0.85rem;
             font-weight: 600;
-            text-transform: uppercase;
         }
 
-        .status-idle { background: var(--bg-elevated); color: var(--text-secondary); }
-        .status-armed { background: rgba(230, 180, 80, 0.3); color: var(--accent-yellow); border: 2px solid var(--accent-yellow); }
-        .status-measuring { background: rgba(57, 186, 230, 0.3); color: var(--accent-blue); border: 2px solid var(--accent-blue); animation: pulse 1s infinite; }
-        .status-completed { background: rgba(127, 217, 98, 0.3); color: var(--accent-green); border: 2px solid var(--accent-green); }
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-left: auto;
+            background: #86868b;
+        }
+
+        .status-dot.armed { background: #34c759; animation: pulse 1.5s infinite; }
+        .status-dot.measuring { background: #007aff; animation: pulse 0.5s infinite; }
+        .status-dot.completed { background: #34c759; }
 
         @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.6; transform: scale(1.1); }
         }
 
-        /* Main - två stora tidsrutor */
-        main {
+        /* Time cards */
+        .time-cards {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 12px;
-            padding: 8px 0;
+            margin-bottom: 12px;
         }
 
         .time-card {
-            background: var(--bg-card);
+            padding: 16px 20px;
             border-radius: 16px;
-            border: 2px solid var(--border);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            padding: 16px;
+            color: white;
         }
 
-        .time-card.complete {
-            border-color: var(--accent-green);
-            background: linear-gradient(135deg, rgba(127, 217, 98, 0.1), transparent);
+        .time-card.tee-hog {
+            background: linear-gradient(135deg, #5a7dfe 0%, #4a6cf5 100%);
+        }
+
+        .time-card.hog-hog {
+            background: linear-gradient(135deg, #a855f7 0%, #9333ea 100%);
         }
 
         .time-label {
             font-size: 0.9rem;
-            color: var(--text-secondary);
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-            margin-bottom: 8px;
+            font-weight: 500;
+            opacity: 0.9;
+            margin-bottom: 4px;
         }
 
         .time-value {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 3.5rem;
+            font-size: 2.8rem;
             font-weight: 700;
-            color: var(--accent-blue);
-            line-height: 1;
+            letter-spacing: -0.02em;
         }
 
         .time-value.waiting {
-            color: var(--text-secondary);
-            font-size: 3rem;
+            opacity: 0.5;
         }
 
-        .time-value.complete {
-            color: var(--accent-green);
-        }
-
-        .time-unit {
-            font-size: 1.2rem;
-            color: var(--text-secondary);
-            margin-left: 4px;
-        }
-
-        /* Knappar */
-        .controls {
-            display: flex;
-            gap: 8px;
-        }
-
-        .btn {
-            flex: 1;
+        /* Rearm button */
+        .btn-rearm {
+            width: 100%;
             padding: 16px;
             border: none;
             border-radius: 12px;
-            font-family: 'Outfit', sans-serif;
+            background: linear-gradient(135deg, #34c759 0%, #30b350 100%);
+            color: white;
+            font-family: inherit;
             font-size: 1.1rem;
-            font-weight: 700;
+            font-weight: 600;
             cursor: pointer;
-            text-transform: uppercase;
-            transition: transform 0.1s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 16px;
+            transition: transform 0.1s, opacity 0.1s;
         }
 
-        .btn:active {
+        .btn-rearm:active {
             transform: scale(0.98);
         }
 
-        .btn-arm {
-            background: linear-gradient(135deg, var(--accent-green), #5ab947);
-            color: #000;
+        .btn-rearm:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
         }
 
-        .btn-disarm {
-            background: linear-gradient(135deg, var(--accent-red), #d4525c);
-            color: #fff;
+        .btn-rearm svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* History section */
+        .history-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            padding-top: 12px;
+            border-top: 1px solid #d2d2d7;
+        }
+
+        .history-header h2 {
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .btn-clear {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 8px;
+            background: #ff3b30;
+            color: white;
+            font-family: inherit;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: transform 0.1s;
+        }
+
+        .btn-clear:active {
+            transform: scale(0.95);
+        }
+
+        .btn-clear svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        /* History table */
+        .history-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.95rem;
+        }
+
+        .history-table th {
+            text-align: left;
+            padding: 10px 8px;
+            font-weight: 500;
+            color: #86868b;
+            border-bottom: 1px solid #d2d2d7;
+        }
+
+        .history-table td {
+            padding: 12px 8px;
+            border-bottom: 1px solid #e5e5e7;
+        }
+
+        .history-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .history-table .time-col {
+            color: #86868b;
+        }
+
+        .history-table .tee-hog-col {
+            color: #5a7dfe;
+            font-weight: 600;
+            font-family: 'SF Mono', 'Menlo', monospace;
+        }
+
+        .history-table .hog-hog-col {
+            color: #9333ea;
+            font-weight: 600;
+            font-family: 'SF Mono', 'Menlo', monospace;
+        }
+
+        .empty-history {
+            text-align: center;
+            padding: 24px;
+            color: #86868b;
+        }
+
+        /* Scrollable history on small screens */
+        .history-wrapper {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        @media (max-height: 500px) {
+            .history-wrapper {
+                max-height: 120px;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
         <header>
-            <div class="logo">
-                <span class="logo-icon">🥌</span>
-                <h1>RockTimer</h1>
-            </div>
-            <div id="status-badge" class="status-badge status-idle">Redo</div>
+            <span class="logo">🥌</span>
+            <h1>Curling Stone Timer</h1>
+            <div class="status-dot" id="status-dot" title="Status"></div>
         </header>
 
-        <main>
-            <div class="time-card" id="card-tee-hog">
-                <div class="time-label">Tee → Hog</div>
-                <div class="time-value waiting" id="value-tee-hog">--<span class="time-unit">s</span></div>
+        <div class="time-cards">
+            <div class="time-card tee-hog">
+                <div class="time-label">Tee-Hog</div>
+                <div class="time-value waiting" id="value-tee-hog">--s</div>
             </div>
-
-            <div class="time-card" id="card-hog-hog">
-                <div class="time-label">Hog → Hog</div>
-                <div class="time-value waiting" id="value-hog-hog">--<span class="time-unit">s</span></div>
+            <div class="time-card hog-hog">
+                <div class="time-label">Hog-Hog</div>
+                <div class="time-value waiting" id="value-hog-hog">--s</div>
             </div>
-        </main>
+        </div>
 
-        <div class="controls">
-            <button class="btn btn-arm" id="btn-arm" onclick="armSystem()">Arma</button>
-            <button class="btn btn-disarm" id="btn-disarm" onclick="disarmSystem()" style="display: none;">Avbryt</button>
+        <button class="btn-rearm" id="btn-rearm" onclick="armSystem()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M1 4v6h6"></path>
+                <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+            </svg>
+            Rearm
+        </button>
+
+        <div class="history-header">
+            <h2>History</h2>
+            <button class="btn-clear" onclick="clearHistory()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M3 6h18"></path>
+                    <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
+                    <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+                </svg>
+                Clear
+            </button>
+        </div>
+
+        <div class="history-wrapper">
+            <table class="history-table">
+                <thead>
+                    <tr>
+                        <th>Time</th>
+                        <th>Tee-Hog</th>
+                        <th>Hog-Hog</th>
+                    </tr>
+                </thead>
+                <tbody id="history-body">
+                    <tr><td colspan="3" class="empty-history">No measurements yet</td></tr>
+                </tbody>
+            </table>
         </div>
     </div>
 
@@ -212,80 +300,85 @@
             const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
             ws = new WebSocket(`${protocol}//${window.location.host}/ws`);
 
-            ws.onopen = () => console.log('WebSocket ansluten');
+            ws.onopen = () => console.log('WebSocket connected');
 
             ws.onmessage = (event) => {
                 const message = JSON.parse(event.data);
                 if (message.type === 'state_update') {
-                    updateUI(message.data);
+                    updateState(message.data);
                 }
             };
 
             ws.onclose = () => {
-                console.log('WebSocket stängd, återansluter...');
+                console.log('WebSocket closed, reconnecting...');
                 setTimeout(connectWebSocket, 2000);
             };
         }
 
-        function updateUI(data) {
+        function updateState(data) {
             currentState = data.state;
             const session = data.session;
 
-            // Status badge
-            const statusBadge = document.getElementById('status-badge');
-            statusBadge.className = 'status-badge status-' + currentState;
-            
-            const statusTexts = {
-                'idle': 'Redo',
-                'armed': 'Armat',
-                'measuring': 'Mäter...',
-                'completed': 'Klar'
-            };
-            statusBadge.textContent = statusTexts[currentState] || currentState;
+            // Status dot
+            const statusDot = document.getElementById('status-dot');
+            statusDot.className = 'status-dot ' + currentState;
 
-            // Tee → Hog (sekunder)
+            // Tee-Hog
             const teeHogEl = document.getElementById('value-tee-hog');
-            const teeHogCard = document.getElementById('card-tee-hog');
             if (session.tee_to_hog_close_ms !== null) {
                 const seconds = (session.tee_to_hog_close_ms / 1000).toFixed(2);
-                teeHogEl.innerHTML = `${seconds}<span class="time-unit">s</span>`;
+                teeHogEl.textContent = seconds + 's';
                 teeHogEl.classList.remove('waiting');
-                teeHogEl.classList.add('complete');
-                teeHogCard.classList.add('complete');
             } else {
-                teeHogEl.innerHTML = `--<span class="time-unit">s</span>`;
+                teeHogEl.textContent = '--s';
                 teeHogEl.classList.add('waiting');
-                teeHogEl.classList.remove('complete');
-                teeHogCard.classList.remove('complete');
             }
 
-            // Hog → Hog (sekunder)
+            // Hog-Hog
             const hogHogEl = document.getElementById('value-hog-hog');
-            const hogHogCard = document.getElementById('card-hog-hog');
             if (session.hog_to_hog_ms !== null) {
                 const seconds = (session.hog_to_hog_ms / 1000).toFixed(2);
-                hogHogEl.innerHTML = `${seconds}<span class="time-unit">s</span>`;
+                hogHogEl.textContent = seconds + 's';
                 hogHogEl.classList.remove('waiting');
-                hogHogEl.classList.add('complete');
-                hogHogCard.classList.add('complete');
             } else {
-                hogHogEl.innerHTML = `--<span class="time-unit">s</span>`;
+                hogHogEl.textContent = '--s';
                 hogHogEl.classList.add('waiting');
-                hogHogEl.classList.remove('complete');
-                hogHogCard.classList.remove('complete');
             }
 
-            // Knappar
-            const btnArm = document.getElementById('btn-arm');
-            const btnDisarm = document.getElementById('btn-disarm');
-
-            if (currentState === 'idle' || currentState === 'completed') {
-                btnArm.style.display = 'block';
-                btnDisarm.style.display = 'none';
+            // Button state
+            const btn = document.getElementById('btn-rearm');
+            if (currentState === 'measuring') {
+                btn.disabled = true;
             } else {
-                btnArm.style.display = 'none';
-                btnDisarm.style.display = 'block';
+                btn.disabled = false;
             }
+        }
+
+        function loadHistory() {
+            fetch('/api/times?limit=10')
+                .then(r => r.json())
+                .then(data => {
+                    const tbody = document.getElementById('history-body');
+                    if (data.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="3" class="empty-history">No measurements yet</td></tr>';
+                        return;
+                    }
+
+                    tbody.innerHTML = data.map(record => {
+                        const time = record.timestamp ? new Date(record.timestamp).toLocaleTimeString('sv-SE') : '--';
+                        const teeHog = record.tee_to_hog_close_ms !== null 
+                            ? (record.tee_to_hog_close_ms / 1000).toFixed(2) + 's' 
+                            : '--';
+                        const hogHog = record.hog_to_hog_ms !== null 
+                            ? (record.hog_to_hog_ms / 1000).toFixed(2) + 's' 
+                            : '--';
+                        return `<tr>
+                            <td class="time-col">${time}</td>
+                            <td class="tee-hog-col">${teeHog}</td>
+                            <td class="hog-hog-col">${hogHog}</td>
+                        </tr>`;
+                    }).join('');
+                });
         }
 
         async function armSystem() {
@@ -296,16 +389,19 @@
             }
         }
 
-        async function disarmSystem() {
-            if (ws && ws.readyState === WebSocket.OPEN) {
-                ws.send(JSON.stringify({ type: 'disarm' }));
-            } else {
-                await fetch('/api/disarm', { method: 'POST' });
+        async function clearHistory() {
+            if (confirm('Rensa all historik?')) {
+                await fetch('/api/clear', { method: 'POST' });
+                loadHistory();
             }
         }
 
+        // Poll history
+        setInterval(loadHistory, 3000);
+
         document.addEventListener('DOMContentLoaded', () => {
             connectWebSocket();
+            loadHistory();
         });
     </script>
 </body>

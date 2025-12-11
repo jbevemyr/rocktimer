@@ -421,6 +421,12 @@ async def get_times(limit: int = 50):
     return server.get_history(limit)
 
 
+@app.post("/api/clear")
+async def clear_times():
+    server.clear_history()
+    return {"success": True}
+
+
 @app.delete("/api/times/{record_id}")
 async def delete_time(record_id: int):
     return {"success": server.delete_record(record_id)}
