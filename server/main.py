@@ -328,11 +328,10 @@ class RockTimerServer:
             seconds = time_ms / 1000.0
             
             # Formatera för uppläsning (t.ex. "3 point 1 0")
-            # Avrunda på samma sätt som UI:t (toFixed(2))
-            rounded = round(seconds, 2)
-            whole = int(rounded)
-            decimals = int(round((rounded - whole) * 100))
-            text = f"{whole} point {decimals}"
+            # Formatera exakt som UI:t gör och parsa tillbaka
+            formatted = f"{seconds:.2f}"  # "3.18"
+            whole, dec = formatted.split('.')
+            text = f"{whole} point {int(dec)}"  # "3 point 18"
             
             logger.info(f"Speaking: '{text}'")
             
