@@ -61,6 +61,62 @@ DO         →  GPIO 27 (pin 13)
 ```
 Håll handen framför IR-sensorn för att arma systemet.
 
+### Ljud - Förstärkare och högtalare (Pi 4)
+
+Systemet läser upp tider med espeak-ng. Använd en liten förstärkarmodul (t.ex. HW-104/PAM8403) 
+och en 3W högtalare för inbyggnad.
+
+**Komponenter:**
+- HW-104 eller PAM8403 förstärkarmodul
+- B103 potentiometer (10kΩ) för volymkontroll
+- 3W högtalare (4-8Ω, ~40mm)
+- 3.5mm audiokabel
+
+**Koppling med volymkontroll:**
+```
+Pi 4                          B103 Potentiometer
+────                          ──────────────────
+3.5mm TIP (ljud) ──────────►  Ben 1 (ingång)
+3.5mm SLEEVE (GND) ────────►  Ben 3 (GND)
+                              Ben 2 (utgång) ───┐
+                                                │
+                              HW-104 Förstärkare│
+                              ──────────────────┘
+Pi 5V (pin 2) ─────────────►  VCC
+Pi GND (pin 6) ────────────►  GND
+Potentiometer ben 2 ───────►  L-IN
+Potentiometer ben 3 ───────►  GND (gemensam)
+                              L+ ──────────────► Högtalare +
+                              L- ──────────────► Högtalare -
+```
+
+**Kopplingsschema:**
+```
+┌─────────┐      ┌──────────────┐      ┌────────┐      ┌──────────┐
+│  Pi 4   │      │ Potentiometer│      │ HW-104 │      │ Högtalare│
+│         │      │    B103      │      │        │      │   3W     │
+│  3.5mm ─┼──1───┤►            │      │        │      │          │
+│   jack  │      │      2──────┼──────┤► L-IN  │      │          │
+│    GND ─┼──────┤► 3          │      │        │      │          │
+│         │      └──────────────┘      │   L+ ──┼──────┤► +       │
+│   5V ───┼────────────────────────────┤► VCC   │      │          │
+│   GND ──┼────────────────────────────┤► GND   │      │          │
+│         │                            │   L- ──┼──────┤► -       │
+└─────────┘                            └────────┘      └──────────┘
+```
+
+**Aktivera analog ljudutgång:**
+```bash
+sudo raspi-config
+# System Options → Audio → Headphones
+
+# Eller direkt:
+amixer cset numid=3 1
+
+# Testa:
+espeak-ng -v sv "Test ett två tre"
+```
+
 ## Test
 
 ```bash
