@@ -70,9 +70,9 @@
         }
 
         .status-badge {
-            padding: 6px 12px;
+            padding: 6px 16px;
             border-radius: 20px;
-            font-size: 0.75rem;
+            font-size: 0.85rem;
             font-weight: 600;
             text-transform: uppercase;
         }
@@ -87,81 +87,49 @@
             50% { opacity: 0.5; }
         }
 
-        /* Main content */
+        /* Main - två stora tidsrutor */
         main {
             display: grid;
-            grid-template-columns: 1fr 140px;
-            gap: 8px;
-            min-height: 0;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            padding: 8px 0;
         }
 
-        .times-section {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        /* Total tid - stor display */
-        .total-time {
+        .time-card {
             background: var(--bg-card);
-            border-radius: 12px;
-            padding: 12px;
-            text-align: center;
-            border: 1px solid var(--accent-blue);
-            flex: 1;
+            border-radius: 16px;
+            border: 2px solid var(--border);
             display: flex;
             flex-direction: column;
             justify-content: center;
+            align-items: center;
+            padding: 16px;
         }
 
-        .total-label {
-            font-size: 0.7rem;
-            color: var(--text-secondary);
-            text-transform: uppercase;
-        }
-
-        .total-value {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 3rem;
-            font-weight: 700;
-            color: var(--accent-green);
-            line-height: 1;
-        }
-
-        /* Deltider */
-        .split-times {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 6px;
-        }
-
-        .time-block {
-            background: var(--bg-card);
-            border-radius: 8px;
-            padding: 8px;
-            text-align: center;
-            border: 1px solid var(--border);
-        }
-
-        .time-block.complete {
+        .time-card.complete {
             border-color: var(--accent-green);
+            background: linear-gradient(135deg, rgba(127, 217, 98, 0.1), transparent);
         }
 
         .time-label {
-            font-size: 0.6rem;
+            font-size: 0.9rem;
             color: var(--text-secondary);
             text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 8px;
         }
 
         .time-value {
             font-family: 'JetBrains Mono', monospace;
-            font-size: 1.1rem;
+            font-size: 3.5rem;
             font-weight: 700;
             color: var(--accent-blue);
+            line-height: 1;
         }
 
         .time-value.waiting {
             color: var(--text-secondary);
+            font-size: 3rem;
         }
 
         .time-value.complete {
@@ -169,55 +137,9 @@
         }
 
         .time-unit {
-            font-size: 0.6rem;
+            font-size: 1.2rem;
             color: var(--text-secondary);
-        }
-
-        /* Historik */
-        .history-panel {
-            background: var(--bg-card);
-            border-radius: 12px;
-            padding: 8px;
-            border: 1px solid var(--border);
-            display: flex;
-            flex-direction: column;
-            min-height: 0;
-        }
-
-        .history-title {
-            font-size: 0.6rem;
-            color: var(--text-secondary);
-            text-transform: uppercase;
-            margin-bottom: 6px;
-        }
-
-        .history-list {
-            flex: 1;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-        }
-
-        .history-item {
-            background: var(--bg-elevated);
-            border-radius: 6px;
-            padding: 6px 8px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 0.75rem;
-        }
-
-        .history-time {
-            font-family: 'JetBrains Mono', monospace;
-            color: var(--accent-blue);
-            font-weight: 700;
-        }
-
-        .history-timestamp {
-            color: var(--text-secondary);
-            font-size: 0.6rem;
+            margin-left: 4px;
         }
 
         /* Knappar */
@@ -228,11 +150,11 @@
 
         .btn {
             flex: 1;
-            padding: 14px;
+            padding: 16px;
             border: none;
-            border-radius: 10px;
+            border-radius: 12px;
             font-family: 'Outfit', sans-serif;
-            font-size: 1rem;
+            font-size: 1.1rem;
             font-weight: 700;
             cursor: pointer;
             text-transform: uppercase;
@@ -252,20 +174,6 @@
             background: linear-gradient(135deg, var(--accent-red), #d4525c);
             color: #fff;
         }
-
-        /* Scrollbar */
-        ::-webkit-scrollbar {
-            width: 4px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: var(--bg-elevated);
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: var(--border);
-            border-radius: 2px;
-        }
     </style>
 </head>
 <body>
@@ -279,27 +187,14 @@
         </header>
 
         <main>
-            <div class="times-section">
-                <div class="total-time">
-                    <div class="total-label">Total Tid</div>
-                    <div class="total-value" id="value-total">--</div>
-                </div>
-
-                <div class="split-times">
-                    <div class="time-block" id="time-tee-hog">
-                        <div class="time-label">Tee → Hog</div>
-                        <div class="time-value waiting" id="value-tee-hog">--<span class="time-unit">ms</span></div>
-                    </div>
-                    <div class="time-block" id="time-hog-hog">
-                        <div class="time-label">Hog → Hog</div>
-                        <div class="time-value waiting" id="value-hog-hog">--<span class="time-unit">ms</span></div>
-                    </div>
-                </div>
+            <div class="time-card" id="card-tee-hog">
+                <div class="time-label">Tee → Hog</div>
+                <div class="time-value waiting" id="value-tee-hog">--<span class="time-unit">ms</span></div>
             </div>
 
-            <div class="history-panel">
-                <div class="history-title">Historik</div>
-                <div class="history-list" id="history-list"></div>
+            <div class="time-card" id="card-hog-hog">
+                <div class="time-label">Hog → Hog</div>
+                <div class="time-value waiting" id="value-hog-hog">--<span class="time-unit">s</span></div>
             </div>
         </main>
 
@@ -348,18 +243,35 @@
             };
             statusBadge.textContent = statusTexts[currentState] || currentState;
 
-            // Tidsvärden
-            updateTimeValue('value-tee-hog', session.tee_to_hog_close_ms, 'ms');
-            updateTimeValue('value-hog-hog', session.hog_to_hog_ms, 'ms');
-
-            // Total
-            const totalEl = document.getElementById('value-total');
-            if (session.total_ms) {
-                totalEl.textContent = (session.total_ms / 1000).toFixed(2) + 's';
-            } else if (session.tee_to_hog_close_ms) {
-                totalEl.textContent = (session.tee_to_hog_close_ms / 1000).toFixed(2) + 's';
+            // Tee → Hog (millisekunder)
+            const teeHogEl = document.getElementById('value-tee-hog');
+            const teeHogCard = document.getElementById('card-tee-hog');
+            if (session.tee_to_hog_close_ms !== null) {
+                teeHogEl.innerHTML = `${session.tee_to_hog_close_ms.toFixed(0)}<span class="time-unit">ms</span>`;
+                teeHogEl.classList.remove('waiting');
+                teeHogEl.classList.add('complete');
+                teeHogCard.classList.add('complete');
             } else {
-                totalEl.textContent = '--';
+                teeHogEl.innerHTML = `--<span class="time-unit">ms</span>`;
+                teeHogEl.classList.add('waiting');
+                teeHogEl.classList.remove('complete');
+                teeHogCard.classList.remove('complete');
+            }
+
+            // Hog → Hog (sekunder)
+            const hogHogEl = document.getElementById('value-hog-hog');
+            const hogHogCard = document.getElementById('card-hog-hog');
+            if (session.hog_to_hog_ms !== null) {
+                const seconds = (session.hog_to_hog_ms / 1000).toFixed(2);
+                hogHogEl.innerHTML = `${seconds}<span class="time-unit">s</span>`;
+                hogHogEl.classList.remove('waiting');
+                hogHogEl.classList.add('complete');
+                hogHogCard.classList.add('complete');
+            } else {
+                hogHogEl.innerHTML = `--<span class="time-unit">s</span>`;
+                hogHogEl.classList.add('waiting');
+                hogHogEl.classList.remove('complete');
+                hogHogCard.classList.remove('complete');
             }
 
             // Knappar
@@ -372,53 +284,6 @@
             } else {
                 btnArm.style.display = 'none';
                 btnDisarm.style.display = 'block';
-            }
-
-            // Markera kompletta tidsblock
-            document.getElementById('time-tee-hog').classList.toggle('complete', session.tee_to_hog_close_ms !== null);
-            document.getElementById('time-hog-hog').classList.toggle('complete', session.hog_to_hog_ms !== null);
-        }
-
-        function updateTimeValue(elementId, value, unit) {
-            const element = document.getElementById(elementId);
-            if (value !== null && value !== undefined) {
-                element.innerHTML = `${value.toFixed(0)}<span class="time-unit">${unit}</span>`;
-                element.classList.remove('waiting');
-                element.classList.add('complete');
-            } else {
-                element.innerHTML = `--<span class="time-unit">${unit}</span>`;
-                element.classList.add('waiting');
-                element.classList.remove('complete');
-            }
-        }
-
-        async function loadHistory() {
-            try {
-                const response = await fetch('/api/times?limit=10');
-                const times = await response.json();
-                
-                const historyList = document.getElementById('history-list');
-                historyList.innerHTML = '';
-
-                times.forEach(record => {
-                    const item = document.createElement('div');
-                    item.className = 'history-item';
-                    
-                    const mainTime = record.total_ms 
-                        ? (record.total_ms / 1000).toFixed(2) + 's'
-                        : (record.tee_to_hog_close_ms / 1000).toFixed(2) + 's*';
-                    
-                    const timestamp = new Date(record.timestamp).toLocaleTimeString('sv-SE', {hour: '2-digit', minute: '2-digit'});
-                    
-                    item.innerHTML = `
-                        <span class="history-time">${mainTime}</span>
-                        <span class="history-timestamp">${timestamp}</span>
-                    `;
-                    
-                    historyList.appendChild(item);
-                });
-            } catch (error) {
-                console.error('Kunde inte ladda historik:', error);
             }
         }
 
@@ -440,8 +305,6 @@
 
         document.addEventListener('DOMContentLoaded', () => {
             connectWebSocket();
-            loadHistory();
-            setInterval(loadHistory, 5000);
         });
     </script>
 </body>
