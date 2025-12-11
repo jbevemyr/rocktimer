@@ -129,9 +129,72 @@ python tools/simulate_triggers.py --device tee
 
 ## API
 
-| Endpoint | Metod | Beskrivning |
-|----------|-------|-------------|
-| `/api/arm` | POST | Arma systemet |
-| `/api/disarm` | POST | Avbryt |
-| `/api/status` | GET | Status |
-| `/api/times` | GET | Historik |
+### POST /api/arm
+Arma systemet för mätning.
+```json
+{"success": true, "state": "armed"}
+```
+
+### POST /api/disarm
+Avbryt pågående mätning.
+```json
+{"success": true, "state": "idle"}
+```
+
+### GET /api/status
+Hämta aktuell status.
+```json
+{
+  "state": "completed",
+  "session": {
+    "tee_time_ns": 1702312345678901234,
+    "hog_close_time_ns": 1702312348778901234,
+    "hog_far_time_ns": 1702312359078901234,
+    "tee_to_hog_close_ms": 3100.0,
+    "hog_to_hog_ms": 10300.0,
+    "total_ms": 13400.0,
+    "has_hog_close": true,
+    "has_hog_far": true,
+    "started_at": "2024-12-11T18:52:25.678901"
+  },
+  "sensors": {}
+}
+```
+
+### GET /api/times
+Hämta historik (senaste mätningarna).
+```json
+[
+  {
+    "id": 1,
+    "timestamp": "2024-12-11T18:52:25.678901",
+    "tee_to_hog_close_ms": 3100.0,
+    "hog_to_hog_ms": 10300.0,
+    "total_ms": 13400.0
+  }
+]
+```
+
+### GET /api/current
+Hämta pågående mätning (samma som session i status).
+```json
+{
+  "tee_to_hog_close_ms": 3100.0,
+  "hog_to_hog_ms": null,
+  "total_ms": null,
+  "has_hog_close": true,
+  "has_hog_far": false
+}
+```
+
+### WebSocket /ws
+Realtidsuppdateringar. Anslut och ta emot state_update-meddelanden:
+```json
+{"type": "state_update", "data": {"state": "armed", "session": {...}}}
+```
+
+Skicka kommandon:
+```json
+{"type": "arm"}
+{"type": "disarm"}
+```
