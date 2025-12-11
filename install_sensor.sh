@@ -38,7 +38,8 @@ echo "[1/5] Installerar systemberoenden..."
 apt-get update
 apt-get install -y \
     python3-pip \
-    python3-venv
+    python3-venv \
+    python3-lgpio
 
 echo "[2/5] Skapar installationskatalog..."
 mkdir -p ${INSTALL_DIR}

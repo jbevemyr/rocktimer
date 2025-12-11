@@ -25,13 +25,16 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse, FileResponse
 import uvicorn
 
-# Försök importera GPIO
+# Försök importera gpiozero
 try:
-    import RPi.GPIO as GPIO
+    from gpiozero import Button
+    from gpiozero.pins.lgpio import LGPIOFactory
+    from gpiozero import Device
+    Device.pin_factory = LGPIOFactory()
     GPIO_AVAILABLE = True
 except ImportError:
     GPIO_AVAILABLE = False
-    print("WARNING: RPi.GPIO not available, running in simulation mode")
+    print("WARNING: gpiozero not available, running in simulation mode")
 
 # Konfigurationsväg
 CONFIG_PATH = Path(__file__).parent.parent / "config.yaml"
@@ -150,43 +153,39 @@ class RockTimerServer:
             return
         
         try:
-            GPIO.setmode(GPIO.BCM)
-            
             # Hog close sensor (tidtagning)
             sensor_pin = self.config['gpio']['sensor_pin']
-            debounce_ms = self.config['gpio']['debounce_ms']
+            debounce_s = self.config['gpio']['debounce_ms'] / 1000.0
             
-            GPIO.setup(sensor_pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-            GPIO.add_event_detect(
-                sensor_pin,
-                GPIO.FALLING,
-                callback=self._local_sensor_triggered,
-                bouncetime=debounce_ms
+            self.sensor_button = Button(
+                sensor_pin, 
+                pull_up=True, 
+                bounce_time=debounce_s
             )
+            self.sensor_button.when_pressed = self._local_sensor_triggered
             logger.info(f"Tidtagningssensor på GPIO {sensor_pin}")
             
             # Arm-sensor (IR-sensor för att arma systemet)
             arm_pin = self.config['gpio'].get('arm_pin')
             if arm_pin:
-                GPIO.setup(arm_pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-                GPIO.add_event_detect(
-                    arm_pin,
-                    GPIO.FALLING,
-                    callback=self._arm_sensor_triggered,
-                    bouncetime=500
+                self.arm_button = Button(
+                    arm_pin, 
+                    pull_up=True, 
+                    bounce_time=0.5
                 )
+                self.arm_button.when_pressed = self._arm_sensor_triggered
                 logger.info(f"Arm-sensor (IR) på GPIO {arm_pin}")
                 
         except Exception as e:
             logger.error(f"GPIO-fel: {e}")
             logger.warning("Fortsätter utan lokal GPIO - använd endast nätverkssensorer")
     
-    def _local_sensor_triggered(self, channel):
+    def _local_sensor_triggered(self):
         """Callback för lokal sensor (hog_close)."""
         trigger_time = time.time_ns()
         self._handle_trigger('hog_close', trigger_time)
     
-    def _arm_sensor_triggered(self, channel):
+    def _arm_sensor_triggered(self):
         """Callback för arm-sensor (IR)."""
         logger.info("Arm-sensor triggad!")
         self.arm()
@@ -380,8 +379,7 @@ async def lifespan(app: FastAPI):
     server.start_udp_listener()
     yield
     server.stop_udp_listener()
-    if GPIO_AVAILABLE:
-        GPIO.cleanup()
+    # gpiozero hanterar cleanup automatiskt
 
 
 app = FastAPI(title="RockTimer", version="1.0.0", lifespan=lifespan)

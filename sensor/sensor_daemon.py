@@ -14,13 +14,16 @@ import signal
 import sys
 from pathlib import Path
 
-# Försök importera GPIO
+# Försök importera gpiozero
 try:
-    import RPi.GPIO as GPIO
+    from gpiozero import Button
+    from gpiozero.pins.lgpio import LGPIOFactory
+    from gpiozero import Device
+    Device.pin_factory = LGPIOFactory()
     GPIO_AVAILABLE = True
 except ImportError:
     GPIO_AVAILABLE = False
-    print("WARNING: RPi.GPIO not available, running in simulation mode")
+    print("WARNING: gpiozero not available, running in simulation mode")
 
 # Konfigurationsväg
 CONFIG_PATH = Path(__file__).parent.parent / "config.yaml"
@@ -40,6 +43,7 @@ class SensorDaemon:
         self.config = self._load_config(config_path)
         self.device_id = self.config['device_id']
         self.running = True
+        self.sensor_button = None
         
         # UDP socket
         self.udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -64,23 +68,25 @@ class SensorDaemon:
         if not GPIO_AVAILABLE:
             logger.warning("GPIO ej tillgängligt - simuleringsläge")
             return
+        
+        try:
+            pin = self.config['gpio']['sensor_pin']
+            debounce_s = self.config['gpio']['debounce_ms'] / 1000.0
             
-        pin = self.config['gpio']['sensor_pin']
-        debounce_ms = self.config['gpio']['debounce_ms']
-        
-        GPIO.setmode(GPIO.BCM)
-        GPIO.setup(pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-        
-        GPIO.add_event_detect(
-            pin, 
-            GPIO.FALLING,
-            callback=self._sensor_triggered,
-            bouncetime=debounce_ms
-        )
-        
-        logger.info(f"GPIO {pin} konfigurerad med debounce {debounce_ms}ms")
+            self.sensor_button = Button(
+                pin,
+                pull_up=True,
+                bounce_time=debounce_s
+            )
+            self.sensor_button.when_pressed = self._sensor_triggered
+            
+            logger.info(f"GPIO {pin} konfigurerad med debounce {debounce_s*1000:.0f}ms")
+            
+        except Exception as e:
+            logger.error(f"GPIO-fel: {e}")
+            logger.warning("Fortsätter utan GPIO")
     
-    def _sensor_triggered(self, channel):
+    def _sensor_triggered(self):
         """Callback när sensorn triggas (ljusstrålen bryts)."""
         # Ta tidsstämpel direkt
         trigger_time = time.time_ns()
@@ -104,11 +110,8 @@ class SensorDaemon:
         """Hantera shutdown-signaler."""
         logger.info("Avslutar...")
         self.running = False
-        
-        if GPIO_AVAILABLE:
-            GPIO.cleanup()
-        
         self.udp_socket.close()
+        # gpiozero hanterar cleanup automatiskt
         sys.exit(0)
     
     def run(self):

@@ -1,3 +1,4 @@
 # Sensor requirements (Pi Zero 2 W)
 pyyaml==6.0.1
-RPi.GPIO==0.7.1
+gpiozero==2.0.1
+lgpio==0.6
