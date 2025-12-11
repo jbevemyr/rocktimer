@@ -305,6 +305,101 @@
             color: #86868b;
             font-size: 1rem;
         }
+
+        /* Settings button */
+        .btn-settings {
+            background: none;
+            border: none;
+            padding: 4px;
+            cursor: pointer;
+            color: #86868b;
+            display: flex;
+            align-items: center;
+            margin-left: 8px;
+        }
+        .btn-settings:hover { color: #1d1d1f; }
+        .btn-settings svg { width: 20px; height: 20px; }
+
+        /* Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 100;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-overlay.open { display: flex; }
+
+        .modal {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            width: 90%;
+            max-width: 320px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+
+        .modal h2 {
+            font-size: 1.2rem;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .modal-close {
+            margin-left: auto;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #86868b;
+            line-height: 1;
+        }
+
+        .setting-group {
+            margin-bottom: 16px;
+        }
+
+        .setting-group label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 0;
+            cursor: pointer;
+            font-size: 0.95rem;
+        }
+
+        .setting-group input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            accent-color: #5a7dfe;
+        }
+
+        .setting-subgroup {
+            margin-left: 30px;
+            border-left: 2px solid #e5e5e7;
+            padding-left: 12px;
+        }
+
+        .btn-save {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 10px;
+            background: #5a7dfe;
+            color: white;
+            font-family: inherit;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .btn-save:active { transform: scale(0.98); }
     </style>
 </head>
 <body>
@@ -313,6 +408,12 @@
             <span class="logo">🥌</span>
             <h1>RockTimer</h1>
             <div class="status-dot" id="status-dot" title="Status"></div>
+            <button class="btn-settings" onclick="openSettings()" title="Settings">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="3"></circle>
+                    <path d="M12 1v2m0 18v2M4.22 4.22l1.42 1.42m12.72 12.72l1.42 1.42M1 12h2m18 0h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"></path>
+                </svg>
+            </button>
         </header>
 
         <div class="main-row">
@@ -375,6 +476,36 @@
                     </tbody>
                 </table>
             </div>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div class="modal-overlay" id="settings-modal" onclick="closeSettings(event)">
+        <div class="modal" onclick="event.stopPropagation()">
+            <h2>
+                ⚙️ Settings
+                <button class="modal-close" onclick="closeSettings()">&times;</button>
+            </h2>
+            
+            <div class="setting-group">
+                <label>
+                    <input type="checkbox" id="speech-enabled">
+                    Enable voice announcements
+                </label>
+                
+                <div class="setting-subgroup" id="speech-options">
+                    <label>
+                        <input type="checkbox" id="speak-tee-hog">
+                        Announce Tee-Hog time
+                    </label>
+                    <label>
+                        <input type="checkbox" id="speak-hog-hog">
+                        Announce Hog-Hog time
+                    </label>
+                </div>
+            </div>
+            
+            <button class="btn-save" onclick="saveSettings()">Save</button>
         </div>
     </div>
 
@@ -533,6 +664,51 @@
             fetch('/api/status')
                 .then(r => r.json())
                 .then(data => updateState(data));
+        }
+
+        // Settings
+        function openSettings() {
+            loadSettings();
+            document.getElementById('settings-modal').classList.add('open');
+        }
+
+        function closeSettings(event) {
+            if (event && event.target !== event.currentTarget) return;
+            document.getElementById('settings-modal').classList.remove('open');
+        }
+
+        function loadSettings() {
+            fetch('/api/settings')
+                .then(r => r.json())
+                .then(data => {
+                    document.getElementById('speech-enabled').checked = data.speech_enabled;
+                    document.getElementById('speak-tee-hog').checked = data.speak_tee_hog;
+                    document.getElementById('speak-hog-hog').checked = data.speak_hog_hog;
+                    updateSpeechOptions();
+                });
+        }
+
+        function updateSpeechOptions() {
+            const enabled = document.getElementById('speech-enabled').checked;
+            document.getElementById('speech-options').style.opacity = enabled ? '1' : '0.4';
+            document.getElementById('speak-tee-hog').disabled = !enabled;
+            document.getElementById('speak-hog-hog').disabled = !enabled;
+        }
+
+        document.getElementById('speech-enabled').addEventListener('change', updateSpeechOptions);
+
+        async function saveSettings() {
+            const settings = {
+                speech_enabled: document.getElementById('speech-enabled').checked,
+                speak_tee_hog: document.getElementById('speak-tee-hog').checked,
+                speak_hog_hog: document.getElementById('speak-hog-hog').checked
+            };
+            await fetch('/api/settings', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(settings)
+            });
+            closeSettings();
         }
 
         document.addEventListener('DOMContentLoaded', () => {

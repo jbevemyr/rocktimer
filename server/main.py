@@ -21,7 +21,7 @@ from contextlib import asynccontextmanager
 from enum import Enum
 from dataclasses import dataclass
 
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse, FileResponse
 import uvicorn
@@ -127,6 +127,13 @@ class RockTimerServer:
         self.session = TimingSession()
         self.websocket_clients: list[WebSocket] = []
         self._loop = None  # Sätts när servern startar
+        
+        # Speech settings (runtime, ej sparade till disk)
+        self.speech_settings = {
+            'speech_enabled': self.config['server'].get('enable_speech', False),
+            'speak_tee_hog': True,
+            'speak_hog_hog': False
+        }
         
         # In-memory historik
         self.history: list[TimingRecord] = []
@@ -286,8 +293,8 @@ class RockTimerServer:
         
         logger.info(f"Klar: TEE→HOG={self.session.tee_to_hog_close_ms:.1f}ms")
         
-        # Läs upp tiden
-        self._speak_time(self.session.tee_to_hog_close_ms)
+        # Läs upp tee-hog tiden
+        self._speak_time(self.session.tee_to_hog_close_ms, 'tee_hog')
     
     def _update_last_record(self):
         """Uppdatera senaste mätning med hog_far-tid."""
@@ -298,11 +305,19 @@ class RockTimerServer:
             total = self.session.total_ms
             if hog_hog and total:
                 logger.info(f"Uppdaterad: HOG→HOG={hog_hog:.1f}ms, Total={total:.1f}ms")
+                # Läs upp hog-hog tiden
+                self._speak_time(hog_hog, 'hog_hog')
     
-    def _speak_time(self, time_ms: float):
+    def _speak_time(self, time_ms: float, time_type: str = 'tee_hog'):
         """Läs upp tiden med text-to-speech."""
-        if not self.config['server'].get('enable_speech', False):
-            logger.debug("Speech är avstängt i config")
+        if not self.speech_settings.get('speech_enabled', False):
+            logger.debug("Speech är avstängt")
+            return
+        
+        # Kolla om denna tid ska läsas upp
+        if time_type == 'tee_hog' and not self.speech_settings.get('speak_tee_hog', True):
+            return
+        if time_type == 'hog_hog' and not self.speech_settings.get('speak_hog_hog', False):
             return
             
         if time_ms is None or time_ms <= 0:
@@ -456,6 +471,21 @@ async def get_times(limit: int = 50):
 @app.post("/api/clear")
 async def clear_times():
     server.clear_history()
+    return {"success": True}
+
+
+@app.get("/api/settings")
+async def get_settings():
+    return server.speech_settings
+
+
+@app.post("/api/settings")
+async def update_settings(request: Request):
+    settings = await request.json()
+    server.speech_settings['speech_enabled'] = settings.get('speech_enabled', False)
+    server.speech_settings['speak_tee_hog'] = settings.get('speak_tee_hog', True)
+    server.speech_settings['speak_hog_hog'] = settings.get('speak_hog_hog', False)
+    logger.info(f"Settings uppdaterade: {server.speech_settings}")
     return {"success": True}
 
 
