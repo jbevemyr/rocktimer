@@ -47,7 +47,7 @@ fi
 
 echo "[5/5] Installerar systemd-tjänster..."
 
-# Server-tjänst
+# Server-tjänst (körs som root för GPIO-åtkomst)
 cat > /etc/systemd/system/rocktimer-server.service << EOF
 [Unit]
 Description=RockTimer Central Server
@@ -55,7 +55,7 @@ After=network.target
 
 [Service]
 Type=simple
-User=${USER}
+User=root
 WorkingDirectory=${INSTALL_DIR}
 Environment="PATH=${INSTALL_DIR}/venv/bin"
 ExecStart=${INSTALL_DIR}/venv/bin/python ${INSTALL_DIR}/server/main.py

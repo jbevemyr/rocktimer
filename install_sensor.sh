@@ -69,7 +69,7 @@ After=network.target
 
 [Service]
 Type=simple
-User=${USER}
+User=root
 WorkingDirectory=${INSTALL_DIR}
 Environment="PATH=${INSTALL_DIR}/venv/bin"
 ExecStart=${INSTALL_DIR}/venv/bin/python ${INSTALL_DIR}/sensor/sensor_daemon.py
