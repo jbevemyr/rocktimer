@@ -1,5 +1,6 @@
 # Server requirements (Pi 4)
 fastapi==0.109.0
 uvicorn==0.27.0
+websockets==12.0
 pyyaml==6.0.1
 RPi.GPIO==0.7.1
