@@ -27,7 +27,7 @@ def send_trigger(sock, server_addr, device_id: str):
     print(f"[{datetime.now().strftime('%H:%M:%S.%f')[:-3]}] Trigger skickad: {device_id}")
 
 
-def simulate_stone_pass(sock, server_addr, delay_tee_hog: float = 2.5, delay_hog_hog: float = 3.0):
+def simulate_stone_pass(sock, server_addr, delay_tee_hog: float = 3.1, delay_hog_hog: float = 10.3):
     """Simulera att en sten passerar alla tre sensorer."""
     print("\nSimulerar stenpassage...")
     print(f"  Tee → Hog (nära): {delay_tee_hog}s")
@@ -55,9 +55,9 @@ def main():
     parser.add_argument("--device", choices=["tee", "hog_close", "hog_far"], 
                        help="Skicka enskild trigger")
     parser.add_argument("--simulate", action="store_true", help="Simulera hel stenpassage")
-    parser.add_argument("--tee-hog", type=float, default=2.5, 
+    parser.add_argument("--tee-hog", type=float, default=3.1, 
                        help="Tid tee→hog i sekunder")
-    parser.add_argument("--hog-hog", type=float, default=3.0,
+    parser.add_argument("--hog-hog", type=float, default=10.3,
                        help="Tid hog→hog i sekunder")
     
     args = parser.parse_args()

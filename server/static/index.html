@@ -189,7 +189,7 @@
         <main>
             <div class="time-card" id="card-tee-hog">
                 <div class="time-label">Tee → Hog</div>
-                <div class="time-value waiting" id="value-tee-hog">--<span class="time-unit">ms</span></div>
+                <div class="time-value waiting" id="value-tee-hog">--<span class="time-unit">s</span></div>
             </div>
 
             <div class="time-card" id="card-hog-hog">
@@ -243,16 +243,17 @@
             };
             statusBadge.textContent = statusTexts[currentState] || currentState;
 
-            // Tee → Hog (millisekunder)
+            // Tee → Hog (sekunder)
             const teeHogEl = document.getElementById('value-tee-hog');
             const teeHogCard = document.getElementById('card-tee-hog');
             if (session.tee_to_hog_close_ms !== null) {
-                teeHogEl.innerHTML = `${session.tee_to_hog_close_ms.toFixed(0)}<span class="time-unit">ms</span>`;
+                const seconds = (session.tee_to_hog_close_ms / 1000).toFixed(2);
+                teeHogEl.innerHTML = `${seconds}<span class="time-unit">s</span>`;
                 teeHogEl.classList.remove('waiting');
                 teeHogEl.classList.add('complete');
                 teeHogCard.classList.add('complete');
             } else {
-                teeHogEl.innerHTML = `--<span class="time-unit">ms</span>`;
+                teeHogEl.innerHTML = `--<span class="time-unit">s</span>`;
                 teeHogEl.classList.add('waiting');
                 teeHogEl.classList.remove('complete');
                 teeHogCard.classList.remove('complete');
