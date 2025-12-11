@@ -125,6 +125,7 @@ class RockTimerServer:
         self.state = SystemState.IDLE
         self.session = TimingSession()
         self.websocket_clients: list[WebSocket] = []
+        self._loop = None  # Sätts när servern startar
         
         # In-memory historik
         self.history: list[TimingRecord] = []
@@ -229,7 +230,7 @@ class RockTimerServer:
             if not self.session.hog_far_time_ns:
                 self.session.hog_far_time_ns = timestamp_ns
                 self._update_last_record()
-                asyncio.create_task(self._broadcast_state())
+                self.broadcast_state()
             return
         
         # Annars ignorera om vi inte är redo att mäta
@@ -255,7 +256,7 @@ class RockTimerServer:
             self.session.hog_far_time_ns = timestamp_ns
             self._update_last_record()
         
-        asyncio.create_task(self._broadcast_state())
+        self.broadcast_state()
     
     def _complete_measurement(self):
         """Slutför mätning efter hog_close."""
@@ -317,7 +318,7 @@ class RockTimerServer:
         self.session.reset()
         self.state = SystemState.ARMED
         logger.info("ARMAT")
-        asyncio.create_task(self._broadcast_state())
+        self.broadcast_state()
         return True
     
     def disarm(self):
@@ -325,7 +326,7 @@ class RockTimerServer:
         self.state = SystemState.IDLE
         self.session.reset()
         logger.info("AVARMAT")
-        asyncio.create_task(self._broadcast_state())
+        self.broadcast_state()
         return True
     
     def get_history(self, limit: int = 50) -> list[dict]:
@@ -358,6 +359,11 @@ class RockTimerServer:
             'sensors': {}
         }
     
+    def broadcast_state(self):
+        """Skicka state till alla klienter (thread-safe)."""
+        if self._loop and self._loop.is_running():
+            asyncio.run_coroutine_threadsafe(self._broadcast_state(), self._loop)
+    
     async def _broadcast_state(self):
         state = self.get_state()
         message = json.dumps({'type': 'state_update', 'data': state})
@@ -375,6 +381,7 @@ server = RockTimerServer()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    server._loop = asyncio.get_running_loop()
     server.setup_gpio()
     server.start_udp_listener()
     yield
