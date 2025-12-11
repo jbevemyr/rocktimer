@@ -319,27 +319,23 @@ class RockTimerServer:
             
             logger.info(f"Speaking: '{text}'")
             
-            # Försök Piper först, fallback till espeak-ng
-            piper_path = '/opt/piper/piper'
-            voice_path = '/opt/piper/voices/en_US-lessac-medium.onnx'
+            # Försök Piper-script först, sedan espeak-ng
+            speak_script = '/opt/piper/speak.sh'
             
-            if os.path.exists(piper_path) and os.path.exists(voice_path):
-                # Piper: använd bash -c för att köra pipen korrekt
-                cmd = f'echo "{text}" | {piper_path} --model {voice_path} --output-raw 2>/dev/null | aplay -r 22050 -f S16_LE -c 1 -D plughw:2,0 -q 2>/dev/null'
+            if os.path.exists(speak_script):
                 subprocess.Popen(
-                    ['/bin/bash', '-c', cmd],
+                    [speak_script, text],
                     stdout=subprocess.DEVNULL,
                     stderr=subprocess.DEVNULL,
                     start_new_session=True
                 )
             else:
                 # Fallback till espeak-ng
-                env = {'ALSA_CARD': '2', 'HOME': '/root'}
                 subprocess.Popen(
                     ['/usr/bin/espeak-ng', '-v', 'en', '-s', '150', text],
                     stdout=subprocess.DEVNULL,
                     stderr=subprocess.DEVNULL,
-                    env=env
+                    env={'ALSA_CARD': '2', 'HOME': '/root'}
                 )
         except FileNotFoundError:
             logger.warning("TTS ej installerat")
