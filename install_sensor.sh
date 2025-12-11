@@ -39,7 +39,8 @@ apt-get update
 apt-get install -y \
     python3-pip \
     python3-venv \
-    python3-lgpio
+    python3-lgpio \
+    python3-gpiozero
 
 echo "[2/5] Skapar installationskatalog..."
 mkdir -p ${INSTALL_DIR}
@@ -48,7 +49,7 @@ chown -R ${USER}:${USER} ${INSTALL_DIR}
 
 echo "[3/5] Skapar Python virtual environment..."
 cd ${INSTALL_DIR}
-python3 -m venv venv
+python3 -m venv --system-site-packages venv
 source venv/bin/activate
 pip install --upgrade pip
 pip install -r requirements-sensor.txt

@@ -1,7 +1,6 @@
 # Server requirements (Pi 4)
+# gpiozero och lgpio installeras via apt (python3-gpiozero, python3-lgpio)
 fastapi==0.109.0
 uvicorn==0.27.0
 websockets==12.0
 pyyaml==6.0.1
-gpiozero==2.0.1
-lgpio==0.6

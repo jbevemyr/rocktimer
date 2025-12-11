@@ -25,6 +25,7 @@ apt-get install -y \
     python3-pip \
     python3-venv \
     python3-lgpio \
+    python3-gpiozero \
     chromium \
     unclutter \
     espeak-ng
@@ -36,7 +37,7 @@ chown -R ${USER}:${USER} ${INSTALL_DIR}
 
 echo "[3/5] Skapar Python virtual environment..."
 cd ${INSTALL_DIR}
-python3 -m venv venv
+python3 -m venv --system-site-packages venv
 source venv/bin/activate
 pip install --upgrade pip
 pip install -r requirements-server.txt
