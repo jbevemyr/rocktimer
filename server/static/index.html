@@ -196,18 +196,24 @@
         }
 
         .btn-toggle {
-            background: none;
+            background: #e5e5e7;
             border: none;
-            padding: 4px;
+            padding: 6px 10px;
+            border-radius: 8px;
             cursor: pointer;
             color: #86868b;
             display: flex;
             align-items: center;
+            font-family: inherit;
+            font-size: 0.75rem;
+            font-weight: 600;
+            gap: 4px;
             transition: color 0.2s;
         }
 
         .btn-toggle:hover { color: #1d1d1f; }
-        .btn-toggle svg { width: 18px; height: 18px; }
+        .btn-toggle:active { transform: scale(0.95); }
+        .btn-toggle svg { width: 14px; height: 14px; }
 
         .btn-clear {
             padding: 4px 10px;
@@ -342,6 +348,7 @@
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" id="toggle-icon">
                     <polyline points="18 15 12 9 6 15"></polyline>
                 </svg>
+                <span id="toggle-text">Göm</span>
             </button>
             <button class="btn-clear" onclick="clearHistory()">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -461,15 +468,18 @@
             const section = document.getElementById('history-section');
             const mainRow = document.querySelector('.main-row');
             const icon = document.getElementById('toggle-icon');
+            const text = document.getElementById('toggle-text');
             
             if (historyVisible) {
                 section.classList.remove('collapsed');
                 mainRow.classList.remove('expanded');
                 icon.innerHTML = '<polyline points="18 15 12 9 6 15"></polyline>';
+                text.textContent = 'Göm';
             } else {
                 section.classList.add('collapsed');
                 mainRow.classList.add('expanded');
                 icon.innerHTML = '<polyline points="6 9 12 15 18 9"></polyline>';
+                text.textContent = 'Visa';
             }
         }
 
