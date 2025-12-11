@@ -285,8 +285,10 @@ class RockTimerServer:
         if self.history:
             self.history[0].hog_to_hog_ms = self.session.hog_to_hog_ms
             self.history[0].total_ms = self.session.total_ms
-            logger.info(f"Uppdaterad: HOG→HOG={self.session.hog_to_hog_ms:.1f}ms, "
-                       f"Total={self.session.total_ms:.1f}ms")
+            hog_hog = self.session.hog_to_hog_ms
+            total = self.session.total_ms
+            if hog_hog and total:
+                logger.info(f"Uppdaterad: HOG→HOG={hog_hog:.1f}ms, Total={total:.1f}ms")
     
     def _speak_time(self, time_ms: float):
         """Läs upp tiden med text-to-speech."""
