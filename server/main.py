@@ -243,18 +243,26 @@ class RockTimerServer:
             self.state = SystemState.MEASURING
             self.session.started_at = datetime.now()
         
-        # Registrera tidpunkt (endast första för varje sensor)
+        # Registrera tidpunkt (endast första för varje sensor, i rätt ordning)
         if device_id == 'tee' and not self.session.tee_time_ns:
             self.session.tee_time_ns = timestamp_ns
             
         elif device_id == 'hog_close' and not self.session.hog_close_time_ns:
-            self.session.hog_close_time_ns = timestamp_ns
-            # Mätningen är "klar" efter hog_close - spara direkt
-            self._complete_measurement()
+            # Ignorera om hog_close kommer före tee (felaktig ordning)
+            if self.session.tee_time_ns and timestamp_ns > self.session.tee_time_ns:
+                self.session.hog_close_time_ns = timestamp_ns
+                # Mätningen är "klar" efter hog_close - spara direkt
+                self._complete_measurement()
+            else:
+                logger.debug(f"Ignorerar hog_close - kom före tee")
             
         elif device_id == 'hog_far' and not self.session.hog_far_time_ns:
-            self.session.hog_far_time_ns = timestamp_ns
-            self._update_last_record()
+            # Ignorera om hog_far kommer före hog_close (felaktig ordning)
+            if self.session.hog_close_time_ns and timestamp_ns > self.session.hog_close_time_ns:
+                self.session.hog_far_time_ns = timestamp_ns
+                self._update_last_record()
+            else:
+                logger.debug(f"Ignorerar hog_far - kom före hog_close")
         
         self.broadcast_state()
     
