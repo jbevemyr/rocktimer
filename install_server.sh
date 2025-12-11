@@ -15,7 +15,9 @@ fi
 
 # Installationsväg
 INSTALL_DIR="/opt/rocktimer"
-USER="pi"
+USER="${SUDO_USER:-$(whoami)}"
+
+echo "Installerar för användare: ${USER}"
 
 echo "[1/5] Installerar systemberoenden..."
 apt-get update
