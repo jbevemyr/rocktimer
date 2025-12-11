@@ -300,14 +300,23 @@ class RockTimerServer:
     
     def _speak_time(self, time_ms: float):
         """Läs upp tiden med text-to-speech."""
+        if not self.config['server'].get('enable_speech', False):
+            logger.debug("Speech är avstängt i config")
+            return
+            
+        if time_ms is None or time_ms <= 0:
+            return
+            
         try:
             # Konvertera till sekunder
             seconds = time_ms / 1000.0
             
-            # Formatera för uppläsning (t.ex. "2 komma 45")
+            # Formatera för uppläsning (t.ex. "3 komma 06")
             whole = int(seconds)
             decimals = int((seconds - whole) * 100)
             text = f"{whole} komma {decimals:02d}"
+            
+            logger.info(f"Läser upp: '{text}'")
             
             # Kör espeak-ng i bakgrunden
             subprocess.Popen(
