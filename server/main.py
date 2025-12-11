@@ -311,12 +311,12 @@ class RockTimerServer:
             # Konvertera till sekunder
             seconds = time_ms / 1000.0
             
-            # Formatera för uppläsning (t.ex. "3 komma 06")
+            # Formatera för uppläsning (t.ex. "3 point 0 6")
             whole = int(seconds)
             decimals = int((seconds - whole) * 100)
-            text = f"{whole} komma {decimals:02d}"
+            text = f"{whole} point {decimals // 10} {decimals % 10}"
             
-            logger.info(f"Läser upp: '{text}'")
+            logger.info(f"Speaking: '{text}'")
             
             # Kör espeak-ng i bakgrunden (använd full sökväg)
             espeak_path = '/usr/bin/espeak-ng'
@@ -325,7 +325,7 @@ class RockTimerServer:
                 'HOME': '/root'
             }
             subprocess.Popen(
-                [espeak_path, '-v', 'sv', '-s', '150', text],
+                [espeak_path, '-v', 'en', '-s', '150', text],
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,
                 env=env
