@@ -323,14 +323,16 @@ class RockTimerServer:
             speak_script = '/opt/piper/speak.sh'
             
             if os.path.exists(speak_script):
-                subprocess.Popen(
+                logger.info(f"Kör: {speak_script} '{text}'")
+                result = subprocess.run(
                     [speak_script, text],
-                    stdout=subprocess.DEVNULL,
-                    stderr=subprocess.DEVNULL,
-                    start_new_session=True
+                    capture_output=True,
+                    text=True
                 )
+                if result.returncode != 0:
+                    logger.error(f"speak.sh fel: {result.stderr}")
             else:
-                # Fallback till espeak-ng
+                logger.warning("speak.sh finns ej, använder espeak-ng")
                 subprocess.Popen(
                     ['/usr/bin/espeak-ng', '-v', 'en', '-s', '150', text],
                     stdout=subprocess.DEVNULL,
