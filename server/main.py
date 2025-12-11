@@ -330,7 +330,7 @@ class RockTimerServer:
             # Formatera för uppläsning (t.ex. "3 point 1 0")
             whole = int(seconds)
             decimals = int((seconds - whole) * 100)
-            text = f"{whole} point {decimals // 10} {decimals % 10}"
+            text = f"{whole} point {decimals}"
             
             logger.info(f"Speaking: '{text}'")
             
