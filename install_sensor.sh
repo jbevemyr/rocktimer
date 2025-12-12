@@ -59,7 +59,7 @@ if [ ! -f ${INSTALL_DIR}/config.yaml ]; then
     cp ${INSTALL_DIR}/config.yaml.example ${INSTALL_DIR}/config.yaml
 fi
 
-# Sätt device_id
+# Set device_id
 sed -i "s/device_id: \"tee\"/device_id: \"${DEVICE_ID}\"/" ${INSTALL_DIR}/config.yaml
 
 echo "[5/5] Installing systemd service..."
