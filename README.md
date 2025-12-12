@@ -93,7 +93,7 @@ Potentiometer pin 3 ───────►  GND (common)
 **Diagram:**
 ```
 ┌─────────┐      ┌──────────────┐      ┌────────┐      ┌──────────┐
-│  Pi 4   │      │ Potentiometer│      │ HW-104 │      │ Högtalare│
+│  Pi 4   │      │ Potentiometer│      │ HW-104 │      │ Speaker  │
 │         │      │    B103      │      │        │      │   3W     │
 │  3.5mm ─┼──1───┤►             │      │        │      │          │
 │   jack  │      │       2──────┼──────┤► L-IN  │      │          │
