@@ -47,6 +47,14 @@ If you have a phone/tablet, you can join the RockTimer Wi‑Fi network and open:
 
 This lets you view live times from your phone and press **Rearm** without using the touchscreen.
 
+### No touchscreen required
+
+The touchscreen is optional. You can build RockTimer without a display and rely on:
+
+- A **phone/tablet** connected to the RockTimer Wi‑Fi network
+- An **Apple Watch** companion (future / external app integration)
+- Any **laptop/desktop** on the same Wi‑Fi network using a web browser
+
 ### Local hostname: http://rocktimer
 
 If you use the provided Wi‑Fi AP setup, dnsmasq can be configured to resolve:
