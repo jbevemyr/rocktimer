@@ -42,6 +42,42 @@ server:
 
 ## Hardware
 
+## Hardware (Bill of Materials)
+
+If you want to build your own RockTimer setup, this is the hardware used in this project.
+
+### Compute + Display
+- **1× Raspberry Pi 4 Model B** (central server at the near hog line)
+- **2× Raspberry Pi Zero 2 W** (remote sensors: tee line + far hog line)
+- **1× Touch display**: Elecrow **RC050** 5-inch HDMI capacitive touch LCD (800×480)
+
+### Sensors (3 trigger points)
+- **3× Light sensor modules** (LM393-style “laser trip” sensors), one per line:
+  - Tee line (Pi Zero 2 W)
+  - Near hog line (Pi 4)
+  - Far hog line (Pi Zero 2 W)
+- **1× IR proximity sensor module** (used on the Pi 4 as an “arm” trigger)
+
+### Lasers (one per trigger point)
+- **3× Red dot laser heads** (3–5V, 650nm, ~5mW, 6mm diameter)  
+  Example: “3v~5V 650nm 5mW Red Dot Laser Head … Outer Diameter 6mm with Leads”
+- **3× Battery holders with switch** (one per laser), e.g.:
+  - “3 AA Battery Holder with Cover and Switch” (4.5V)
+
+### Power
+- **3× Power banks** (one per Raspberry Pi)
+  - Pick capacity based on expected runtime; a Pi 4 typically needs a larger bank than a Zero 2 W.
+
+### Audio (for voice announcements)
+- **1× Small amplifier module** (e.g. PAM8403 / HW-104)
+- **1× Speaker** (recommended: **3W**, **4–8Ω**, small form factor ~40mm)
+- **1× Potentiometer for volume**: **B103 (10kΩ)** (thumbwheel or trimmer)
+- **1× 3.5mm audio cable** (Pi 4 headphone jack → amplifier input)
+
+### Wiring / mounting (recommended)
+- Jumper wires / Dupont cables, screw terminals, heat-shrink, etc.
+- Mounting hardware for sensors + lasers (brackets/holders) to keep alignment stable.
+
 ### Timing sensor (all Pi's)
 ```
 LM393 Light sensor  →  Raspberry Pi
