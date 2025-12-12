@@ -39,6 +39,19 @@ After running it:
 - Verify they get an IP in the `192.168.50.x` range
 - Ensure the server IP in the sensor config is set to the Pi 4 address (e.g. `192.168.50.1`)
 
+### Viewing times from a phone
+
+If you have a phone/tablet, you can join the RockTimer Wi‑Fi network and open:
+
+- `http://192.168.50.1` (or `http://192.168.50.1:8080`)
+
+This lets you view live times from your phone and press **Rearm** without using the touchscreen.
+
+### Apple Watch (future)
+
+The idea is to extend the Apple Watch app **“Curling Timer”** so it can display RockTimer times (and optionally arm/rearm).
+The repository also contains a simple Apple Watch companion app under `apple-watch/` that can be used as a starting point.
+
 ## Time sync (Chrony)
 
 Accurate timing requires the clocks on all devices to be synchronized.
