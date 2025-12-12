@@ -495,6 +495,10 @@
                 
                 <div class="setting-subgroup" id="speech-options">
                     <label>
+                        <input type="checkbox" id="speak-ready">
+                        Say “ready to go” when armed
+                    </label>
+                    <label>
                         <input type="checkbox" id="speak-tee-hog">
                         Announce Tee-Hog time
                     </label>
@@ -682,6 +686,7 @@
                 .then(r => r.json())
                 .then(data => {
                     document.getElementById('speech-enabled').checked = data.speech_enabled;
+                    document.getElementById('speak-ready').checked = data.speak_ready;
                     document.getElementById('speak-tee-hog').checked = data.speak_tee_hog;
                     document.getElementById('speak-hog-hog').checked = data.speak_hog_hog;
                     updateSpeechOptions();
@@ -691,6 +696,7 @@
         function updateSpeechOptions() {
             const enabled = document.getElementById('speech-enabled').checked;
             document.getElementById('speech-options').style.opacity = enabled ? '1' : '0.4';
+            document.getElementById('speak-ready').disabled = !enabled;
             document.getElementById('speak-tee-hog').disabled = !enabled;
             document.getElementById('speak-hog-hog').disabled = !enabled;
         }
@@ -700,6 +706,7 @@
         async function saveSettings() {
             const settings = {
                 speech_enabled: document.getElementById('speech-enabled').checked,
+                speak_ready: document.getElementById('speak-ready').checked,
                 speak_tee_hog: document.getElementById('speak-tee-hog').checked,
                 speak_hog_hog: document.getElementById('speak-hog-hog').checked
             };

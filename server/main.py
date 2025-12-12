@@ -132,7 +132,8 @@ class RockTimerServer:
         self.speech_settings = {
             'speech_enabled': self.config['server'].get('enable_speech', False),
             'speak_tee_hog': True,
-            'speak_hog_hog': False
+            'speak_hog_hog': False,
+            'speak_ready': True
         }
         
         # In-memory historik
@@ -307,6 +308,32 @@ class RockTimerServer:
                 logger.info(f"Uppdaterad: HOG→HOG={hog_hog:.1f}ms, Total={total:.1f}ms")
                 # Läs upp hog-hog tiden
                 self._speak_time(hog_hog, 'hog_hog')
+
+    def _speak_phrase(self, text: str):
+        """Speak a short phrase via Piper (or fallback TTS)."""
+        if not self.speech_settings.get('speech_enabled', False):
+            return
+        if not text:
+            return
+
+        try:
+            speak_script = '/opt/piper/speak.sh'
+            if os.path.exists(speak_script):
+                subprocess.Popen(
+                    [speak_script, text],
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                    start_new_session=True
+                )
+            else:
+                subprocess.Popen(
+                    ['/usr/bin/espeak-ng', '-v', 'en', '-s', '150', text],
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                    env={'ALSA_CARD': '2', 'HOME': '/root'}
+                )
+        except Exception as e:
+            logger.error(f"TTS error: {e}")
     
     def _speak_time(self, time_ms: float, time_type: str = 'tee_hog'):
         """Läs upp tiden med text-to-speech."""
@@ -368,6 +395,8 @@ class RockTimerServer:
         self.session.reset()
         self.state = SystemState.ARMED
         logger.info("ARMAT")
+        if self.speech_settings.get('speak_ready', True):
+            self._speak_phrase("ready to go")
         self.broadcast_state()
         return True
     
@@ -486,6 +515,7 @@ async def update_settings(request: Request):
     server.speech_settings['speech_enabled'] = settings.get('speech_enabled', False)
     server.speech_settings['speak_tee_hog'] = settings.get('speak_tee_hog', True)
     server.speech_settings['speak_hog_hog'] = settings.get('speak_hog_hog', False)
+    server.speech_settings['speak_ready'] = settings.get('speak_ready', True)
     logger.info(f"Settings uppdaterade: {server.speech_settings}")
     return {"success": True}
 
