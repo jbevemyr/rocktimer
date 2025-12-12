@@ -8,6 +8,8 @@ It is designed for a **3‑Pi setup**:
 
 The goal is to provide a fast, touch-friendly display (and optional voice callouts) for practice and training—without needing external internet or cloud services.
 
+Inspired by `LarryRockTimer.com`.
+
 ## Overview
 
 ```
