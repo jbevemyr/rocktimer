@@ -26,9 +26,11 @@ apt-get install -y \
     python3-venv \
     python3-lgpio \
     python3-gpiozero \
+    alsa-utils \
     chromium \
     unclutter \
-    espeak-ng
+    wget \
+    tar
 
 echo "[2/5] Creating install directory..."
 mkdir -p ${INSTALL_DIR}
@@ -46,6 +48,36 @@ echo "[4/5] Copying configuration file..."
 if [ ! -f ${INSTALL_DIR}/config.yaml ]; then
     cp ${INSTALL_DIR}/configs/config-pi4-hog-close.yaml ${INSTALL_DIR}/config.yaml
 fi
+
+echo "[4b/5] Installing Piper TTS..."
+PIPER_DIR="/opt/piper"
+PIPER_VOICE_DIR="${PIPER_DIR}/voices"
+PIPER_BIN="${PIPER_DIR}/piper"
+PIPER_MODEL="${PIPER_VOICE_DIR}/en_US-lessac-medium.onnx"
+
+mkdir -p "${PIPER_VOICE_DIR}"
+
+# Download piper binary (arm64)
+if [ ! -x "${PIPER_BIN}" ]; then
+    tmpdir="$(mktemp -d)"
+    wget -q -O "${tmpdir}/piper_arm64.tar.gz" "https://github.com/rhasspy/piper/releases/download/v1.2.0/piper_arm64.tar.gz"
+    tar -xzf "${tmpdir}/piper_arm64.tar.gz" -C "${PIPER_DIR}"
+    rm -rf "${tmpdir}"
+fi
+
+# Download voice model
+if [ ! -f "${PIPER_MODEL}" ]; then
+    wget -q -O "${PIPER_MODEL}" "https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/lessac/medium/en_US-lessac-medium.onnx"
+    wget -q -O "${PIPER_MODEL}.json" "https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/lessac/medium/en_US-lessac-medium.onnx.json"
+fi
+
+# Install the helper script the server uses
+cat > "${PIPER_DIR}/speak.sh" << 'EOF'
+#!/bin/bash
+TEXT="$1"
+echo "$TEXT" | /opt/piper/piper --model /opt/piper/voices/en_US-lessac-medium.onnx --output-raw 2>/dev/null | /usr/bin/aplay -r 22050 -f S16_LE -c 1 -D plughw:2,0 -q 2>/dev/null
+EOF
+chmod +x "${PIPER_DIR}/speak.sh"
 
 echo "[5/5] Installing systemd services..."
 

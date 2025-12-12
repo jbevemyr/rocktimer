@@ -226,6 +226,8 @@ Hold your hand in front of the IR sensor to arm the system.
 The system can announce times using text-to-speech. Use a small amplifier module (e.g. HW-104/PAM8403)
 and a 3W speaker for an enclosure build.
 
+RockTimer uses **Piper (Coqui TTS)** for speech. The server calls `/opt/piper/speak.sh`, which pipes Piper audio to `/usr/bin/aplay`.
+
 **Parts:**
 - HW-104 or PAM8403 amplifier module
 - B103 potentiometer (10kΩ) for volume control
@@ -273,8 +275,11 @@ sudo raspi-config
 # Or directly:
 amixer cset numid=3 1
 
-# Test:
-espeak-ng -v en "Test one two three"
+# Test Piper (Coqui TTS via piper binary):
+echo "ready to go" | /opt/piper/piper --model /opt/piper/voices/en_US-lessac-medium.onnx --output-raw | /usr/bin/aplay -r 22050 -f S16_LE -c 1 -D plughw:2,0
+
+# Or test via the helper script used by the server:
+/opt/piper/speak.sh "ready to go"
 ```
 
 ## Test
