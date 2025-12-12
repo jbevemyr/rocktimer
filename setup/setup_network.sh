@@ -15,8 +15,8 @@ if [ "$EUID" -ne 0 ]; then
 fi
 
 # Variables
-SSID="RockTimer"
-PASSWORD="curling123"
+SSID="rocktimer"
+PASSWORD="rocktimer"
 IP_ADDRESS="192.168.50.1"
 
 echo "[1/4] Installing hostapd and dnsmasq..."

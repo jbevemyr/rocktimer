@@ -35,7 +35,7 @@ sudo ./setup/setup_network.sh
 ```
 
 After running it:
-- Connect your **Pi Zero 2 W** devices to the SSID shown by the script (default `RockTimer`)
+- Connect your **Pi Zero 2 W** devices to the SSID shown by the script (default `rocktimer`)
 - Verify they get an IP in the `192.168.50.x` range
 - Ensure the server IP in the sensor config is set to the Pi 4 address (e.g. `192.168.50.1`)
 
