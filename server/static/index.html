@@ -592,7 +592,7 @@
         }
 
         async function clearHistory() {
-            if (confirm('Rensa all historik?')) {
+            if (confirm('Clear all history?')) {
                 await fetch('/api/clear', { method: 'POST' });
                 loadHistory();
             }

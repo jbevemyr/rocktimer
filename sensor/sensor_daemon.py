@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
 RockTimer Sensor Daemon
-Körs på Pi Zero 2 W vid tee-linjen och avlägsna hog-linjen.
-Övervakar ljussensorn och skickar tidsstämplar via UDP.
+Runs on Pi Zero 2 W at the tee line and the far hog line.
+Monitors the light sensor and sends timestamps over UDP.
 """
 
 import socket
@@ -14,7 +14,7 @@ import signal
 import sys
 from pathlib import Path
 
-# Försök importera gpiozero
+# Try importing gpiozero
 try:
     from gpiozero import Button
     from gpiozero.pins.lgpio import LGPIOFactory
@@ -25,7 +25,7 @@ except ImportError:
     GPIO_AVAILABLE = False
     print("WARNING: gpiozero not available, running in simulation mode")
 
-# Konfigurationsväg
+# Config path
 CONFIG_PATH = Path(__file__).parent.parent / "config.yaml"
 
 # Logging
@@ -37,7 +37,7 @@ logger = logging.getLogger('rocktimer-sensor')
 
 
 class SensorDaemon:
-    """Huvudklass för sensordaemon."""
+    """Main sensor daemon class."""
     
     def __init__(self, config_path: Path = CONFIG_PATH):
         self.config = self._load_config(config_path)
@@ -56,17 +56,17 @@ class SensorDaemon:
         logger.info(f"Server: {self.server_address}")
         
     def _load_config(self, config_path: Path) -> dict:
-        """Ladda konfiguration från YAML-fil."""
+        """Load configuration from YAML file."""
         if not config_path.exists():
-            raise FileNotFoundError(f"Konfigurationsfil saknas: {config_path}")
+            raise FileNotFoundError(f"Config file missing: {config_path}")
         
         with open(config_path, 'r') as f:
             return yaml.safe_load(f)
     
     def _setup_gpio(self):
-        """Konfigurera GPIO för ljussensorn."""
+        """Configure GPIO for the light sensor."""
         if not GPIO_AVAILABLE:
-            logger.warning("GPIO ej tillgängligt - simuleringsläge")
+            logger.warning("GPIO not available - running in simulation mode")
             return
         
         try:
@@ -80,20 +80,20 @@ class SensorDaemon:
             )
             self.sensor_button.when_pressed = self._sensor_triggered
             
-            logger.info(f"GPIO {pin} konfigurerad med debounce {debounce_s*1000:.0f}ms")
+            logger.info(f"GPIO {pin} configured with debounce {debounce_s*1000:.0f}ms")
             
         except Exception as e:
-            logger.error(f"GPIO-fel: {e}")
-            logger.warning("Fortsätter utan GPIO")
+            logger.error(f"GPIO error: {e}")
+            logger.warning("Continuing without GPIO")
     
     def _sensor_triggered(self):
-        """Callback när sensorn triggas (ljusstrålen bryts)."""
-        # Ta tidsstämpel direkt
+        """Callback when the sensor triggers (laser beam breaks)."""
+        # Capture timestamp immediately
         trigger_time = time.time_ns()
         
         logger.info(f"TRIGGER! {self.device_id}")
         
-        # Skicka via UDP - servern avgör om den bryr sig
+        # Send via UDP - server decides whether to act on it
         payload = {
             'type': 'trigger',
             'device_id': self.device_id,
@@ -104,26 +104,26 @@ class SensorDaemon:
             data = json.dumps(payload).encode('utf-8')
             self.udp_socket.sendto(data, self.server_address)
         except Exception as e:
-            logger.error(f"Kunde inte skicka UDP: {e}")
+            logger.error(f"Could not send UDP: {e}")
     
     def _signal_handler(self, signum, frame):
-        """Hantera shutdown-signaler."""
-        logger.info("Avslutar...")
+        """Handle shutdown signals."""
+        logger.info("Shutting down...")
         self.running = False
         self.udp_socket.close()
         # gpiozero hanterar cleanup automatiskt
         sys.exit(0)
     
     def run(self):
-        """Starta sensor daemon."""
+        """Start the sensor daemon."""
         signal.signal(signal.SIGINT, self._signal_handler)
         signal.signal(signal.SIGTERM, self._signal_handler)
         
         self._setup_gpio()
         
-        logger.info("Sensor daemon startad - skickar triggers till servern")
+        logger.info("Sensor daemon started - sending triggers to server")
         
-        # Håll processen igång
+        # Keep the process alive
         while self.running:
             time.sleep(1)
 

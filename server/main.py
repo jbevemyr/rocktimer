@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
 RockTimer Central Server
-Körs på Pi 4 vid närmaste hog-linjen.
-Samlar in tidsstämplar, beräknar tider och serverar webb-UI.
+Runs on the Pi 4 at the near hog line.
+Collects timestamps, calculates times, and serves the web UI.
 """
 
 import asyncio
@@ -26,7 +26,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse, FileResponse
 import uvicorn
 
-# Försök importera gpiozero
+# Try importing gpiozero
 try:
     from gpiozero import Button
     from gpiozero.pins.lgpio import LGPIOFactory
@@ -37,7 +37,7 @@ except ImportError:
     GPIO_AVAILABLE = False
     print("WARNING: gpiozero not available, running in simulation mode")
 
-# Konfigurationsväg
+# Config path
 CONFIG_PATH = Path(__file__).parent.parent / "config.yaml"
 
 # Logging
@@ -60,12 +60,12 @@ class TimingRecord:
     id: int
     timestamp: datetime
     tee_to_hog_close_ms: float
-    hog_to_hog_ms: Optional[float]  # None om stenen inte nådde hog_far
+    hog_to_hog_ms: Optional[float]  # None if the stone did not reach hog_far
     total_ms: Optional[float]
 
 
 class TimingSession:
-    """Håller reda på en mätsession."""
+    """Holds state for a measurement session."""
     
     def __init__(self):
         self.reset()
@@ -96,7 +96,7 @@ class TimingSession:
     
     @property
     def has_hog_close(self) -> bool:
-        """True om stenen passerat första hog-linjen."""
+        """True if the stone passed the near hog line."""
         return self.tee_time_ns is not None and self.hog_close_time_ns is not None
     
     @property
@@ -119,14 +119,14 @@ class TimingSession:
 
 
 class RockTimerServer:
-    """Huvudklass för RockTimer-servern."""
+    """Main class for the RockTimer server."""
     
     def __init__(self, config_path: Path = CONFIG_PATH):
         self.config = self._load_config(config_path)
         self.state = SystemState.IDLE
         self.session = TimingSession()
         self.websocket_clients: list[WebSocket] = []
-        self._loop = None  # Sätts när servern startar
+        self._loop = None  # Set when the server starts
         
         # Speech settings (runtime, ej sparade till disk)
         self.speech_settings = {
@@ -136,11 +136,11 @@ class RockTimerServer:
             'speak_ready': True
         }
         
-        # In-memory historik
+        # In-memory history
         self.history: list[TimingRecord] = []
         self._next_id = 1
         
-        # UDP socket för att ta emot triggers
+        # UDP socket to receive triggers
         self.udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.udp_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.udp_socket.bind(('0.0.0.0', self.config['server']['udp_port']))
@@ -152,14 +152,14 @@ class RockTimerServer:
     
     def _load_config(self, config_path: Path) -> dict:
         if not config_path.exists():
-            raise FileNotFoundError(f"Konfigurationsfil saknas: {config_path}")
+            raise FileNotFoundError(f"Config file missing: {config_path}")
         with open(config_path, 'r') as f:
             return yaml.safe_load(f)
     
     def setup_gpio(self):
-        """Konfigurera GPIO för sensorer."""
+        """Configure GPIO for local sensors."""
         if not GPIO_AVAILABLE:
-            logger.warning("GPIO ej tillgängligt - kör utan lokal sensor")
+            logger.warning("GPIO not available - running without local sensors")
             return
         
         try:
@@ -173,9 +173,9 @@ class RockTimerServer:
                 bounce_time=debounce_s
             )
             self.sensor_button.when_pressed = self._local_sensor_triggered
-            logger.info(f"Tidtagningssensor på GPIO {sensor_pin}")
+            logger.info(f"Timing sensor on GPIO {sensor_pin}")
             
-            # Arm-sensor (IR-sensor för att arma systemet)
+            # Arm sensor (IR) to arm the system
             arm_pin = self.config['gpio'].get('arm_pin')
             if arm_pin:
                 self.arm_button = Button(
@@ -184,24 +184,24 @@ class RockTimerServer:
                     bounce_time=0.5
                 )
                 self.arm_button.when_pressed = self._arm_sensor_triggered
-                logger.info(f"Arm-sensor (IR) på GPIO {arm_pin}")
+                logger.info(f"Arm sensor (IR) on GPIO {arm_pin}")
                 
         except Exception as e:
-            logger.error(f"GPIO-fel: {e}")
-            logger.warning("Fortsätter utan lokal GPIO - använd endast nätverkssensorer")
+            logger.error(f"GPIO error: {e}")
+            logger.warning("Continuing without local GPIO - using network sensors only")
     
     def _local_sensor_triggered(self):
-        """Callback för lokal sensor (hog_close)."""
+        """Callback for local sensor (hog_close)."""
         trigger_time = time.time_ns()
         self._handle_trigger('hog_close', trigger_time)
     
     def _arm_sensor_triggered(self):
-        """Callback för arm-sensor (IR)."""
-        logger.info("Arm-sensor triggad!")
+        """Callback for arm sensor (IR)."""
+        logger.info("Arm sensor triggered!")
         self.arm()
     
     def start_udp_listener(self):
-        """Starta UDP-lyssnare i egen tråd."""
+        """Start UDP listener in its own thread."""
         self._running = True
         self._udp_thread = threading.Thread(target=self._udp_listener_loop, daemon=True)
         self._udp_thread.start()
@@ -212,7 +212,7 @@ class RockTimerServer:
         self.udp_socket.close()
     
     def _udp_listener_loop(self):
-        """Lyssna på UDP-meddelanden."""
+        """Listen for UDP messages."""
         while self._running:
             try:
                 data, addr = self.udp_socket.recvfrom(1024)
@@ -231,10 +231,10 @@ class RockTimerServer:
                 logger.error(f"Ogiltigt JSON: {e}")
     
     def _handle_trigger(self, device_id: str, timestamp_ns: int):
-        """Hantera trigger från sensor."""
+        """Handle a trigger from a sensor."""
         logger.info(f"Trigger: {device_id}")
         
-        # hog_far kan komma efter COMPLETED - uppdatera senaste mätning
+        # hog_far can arrive after COMPLETED - update the latest measurement
         if device_id == 'hog_far' and self.state == SystemState.COMPLETED:
             if not self.session.hog_far_time_ns:
                 self.session.hog_far_time_ns = timestamp_ns
@@ -242,48 +242,48 @@ class RockTimerServer:
                 self.broadcast_state()
             return
         
-        # Annars ignorera om vi inte är redo att mäta
+        # Otherwise ignore if we are not ready to measure
         if self.state not in [SystemState.ARMED, SystemState.MEASURING]:
-            logger.debug(f"Ignorerar trigger från {device_id} - ej armat")
+            logger.debug(f"Ignoring trigger from {device_id} - not armed")
             return
         
-        # Första triggern startar mätningen
+        # First trigger starts the measurement
         if self.state == SystemState.ARMED:
             self.state = SystemState.MEASURING
             self.session.started_at = datetime.now()
         
-        # Registrera tidpunkt (endast första för varje sensor, i rätt ordning)
+        # Record timestamp (first only for each sensor, in correct order)
         if device_id == 'tee' and not self.session.tee_time_ns:
             self.session.tee_time_ns = timestamp_ns
             
         elif device_id == 'hog_close' and not self.session.hog_close_time_ns:
-            # Ignorera om hog_close kommer före tee (felaktig ordning)
+            # Ignore if hog_close arrives before tee (invalid order)
             if self.session.tee_time_ns and timestamp_ns > self.session.tee_time_ns:
                 self.session.hog_close_time_ns = timestamp_ns
-                # Mätningen är "klar" efter hog_close - spara direkt
+                # Measurement is \"complete\" after hog_close - save immediately
                 self._complete_measurement()
             else:
-                logger.debug(f"Ignorerar hog_close - kom före tee")
+                logger.debug("Ignoring hog_close - arrived before tee")
             
         elif device_id == 'hog_far' and not self.session.hog_far_time_ns:
-            # Ignorera om hog_far kommer före hog_close (felaktig ordning)
+            # Ignore if hog_far arrives before hog_close (invalid order)
             if self.session.hog_close_time_ns and timestamp_ns > self.session.hog_close_time_ns:
                 self.session.hog_far_time_ns = timestamp_ns
                 self._update_last_record()
             else:
-                logger.debug(f"Ignorerar hog_far - kom före hog_close")
+                logger.debug("Ignoring hog_far - arrived before hog_close")
         
         self.broadcast_state()
     
     def _complete_measurement(self):
-        """Slutför mätning efter hog_close."""
+        """Complete measurement after hog_close."""
         self.state = SystemState.COMPLETED
         
         record = TimingRecord(
             id=self._next_id,
             timestamp=self.session.started_at,
             tee_to_hog_close_ms=self.session.tee_to_hog_close_ms,
-            hog_to_hog_ms=None,  # Fylls i om stenen når hog_far
+            hog_to_hog_ms=None,  # Filled if the stone reaches hog_far
             total_ms=None
         )
         self._next_id += 1
@@ -292,21 +292,21 @@ class RockTimerServer:
         if len(self.history) > 100:
             self.history = self.history[:100]
         
-        logger.info(f"Klar: TEE→HOG={self.session.tee_to_hog_close_ms:.1f}ms")
+        logger.info(f"Complete: TEE→HOG={self.session.tee_to_hog_close_ms:.1f}ms")
         
-        # Läs upp tee-hog tiden
+        # Speak tee-hog time
         self._speak_time(self.session.tee_to_hog_close_ms, 'tee_hog')
     
     def _update_last_record(self):
-        """Uppdatera senaste mätning med hog_far-tid."""
+        """Update the latest measurement with hog_far time."""
         if self.history:
             self.history[0].hog_to_hog_ms = self.session.hog_to_hog_ms
             self.history[0].total_ms = self.session.total_ms
             hog_hog = self.session.hog_to_hog_ms
             total = self.session.total_ms
             if hog_hog and total:
-                logger.info(f"Uppdaterad: HOG→HOG={hog_hog:.1f}ms, Total={total:.1f}ms")
-                # Läs upp hog-hog tiden
+                logger.info(f"Updated: HOG→HOG={hog_hog:.1f}ms, Total={total:.1f}ms")
+                # Speak hog-hog time
                 self._speak_time(hog_hog, 'hog_hog')
 
     def _speak_phrase(self, text: str):
@@ -336,12 +336,12 @@ class RockTimerServer:
             logger.error(f"TTS error: {e}")
     
     def _speak_time(self, time_ms: float, time_type: str = 'tee_hog'):
-        """Läs upp tiden med text-to-speech."""
+        """Speak a time value via text-to-speech."""
         if not self.speech_settings.get('speech_enabled', False):
-            logger.debug("Speech är avstängt")
+            logger.debug("Speech is disabled")
             return
         
-        # Kolla om denna tid ska läsas upp
+        # Check whether this time type should be spoken
         if time_type == 'tee_hog' and not self.speech_settings.get('speak_tee_hog', True):
             return
         if time_type == 'hog_hog' and not self.speech_settings.get('speak_hog_hog', False):
@@ -351,31 +351,30 @@ class RockTimerServer:
             return
             
         try:
-            # Konvertera till sekunder
+            # Convert to seconds
             seconds = time_ms / 1000.0
             
-            # Formatera för uppläsning (t.ex. "3 point 1 0")
-            # Formatera exakt som UI:t gör och parsa tillbaka
+            # Format exactly like the UI and speak it
             formatted = f"{seconds:.2f}"  # "3.18"
             whole, dec = formatted.split('.')
             text = f"{whole} point {int(dec)}"  # "3 point 18"
             
             logger.info(f"Speaking: '{text}'")
             
-            # Försök Piper-script först, sedan espeak-ng
+            # Try Piper script first, then fallback to espeak-ng
             speak_script = '/opt/piper/speak.sh'
             
             if os.path.exists(speak_script):
-                logger.info(f"Kör: {speak_script} '{text}'")
+                logger.info(f"Running: {speak_script} '{text}'")
                 result = subprocess.run(
                     [speak_script, text],
                     capture_output=True,
                     text=True
                 )
                 if result.returncode != 0:
-                    logger.error(f"speak.sh fel: {result.stderr}")
+                    logger.error(f"speak.sh error: {result.stderr}")
             else:
-                logger.warning("speak.sh finns ej, använder espeak-ng")
+                logger.warning("speak.sh not found, using espeak-ng")
                 subprocess.Popen(
                     ['/usr/bin/espeak-ng', '-v', 'en', '-s', '150', text],
                     stdout=subprocess.DEVNULL,
@@ -383,28 +382,28 @@ class RockTimerServer:
                     env={'ALSA_CARD': '2', 'HOME': '/root'}
                 )
         except FileNotFoundError:
-            logger.warning("TTS ej installerat")
+            logger.warning("TTS not installed")
         except Exception as e:
-            logger.error(f"TTS-fel: {e}")
+            logger.error(f"TTS error: {e}")
     
     def arm(self):
-        """Arma systemet."""
+        """Arm the system."""
         if self.state not in [SystemState.IDLE, SystemState.COMPLETED]:
             return False
         
         self.session.reset()
         self.state = SystemState.ARMED
-        logger.info("ARMAT")
+        logger.info("ARMED")
         if self.speech_settings.get('speak_ready', True):
             self._speak_phrase("ready to go")
         self.broadcast_state()
         return True
     
     def disarm(self):
-        """Avaktivera."""
+        """Disarm."""
         self.state = SystemState.IDLE
         self.session.reset()
-        logger.info("AVARMAT")
+        logger.info("DISARMED")
         self.broadcast_state()
         return True
     
@@ -439,7 +438,7 @@ class RockTimerServer:
         }
     
     def broadcast_state(self):
-        """Skicka state till alla klienter (thread-safe)."""
+        """Broadcast state to all clients (thread-safe)."""
         if self._loop and self._loop.is_running():
             asyncio.run_coroutine_threadsafe(self._broadcast_state(), self._loop)
     
