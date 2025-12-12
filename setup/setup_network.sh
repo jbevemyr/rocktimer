@@ -57,13 +57,26 @@ EOF
 # Enable hostapd
 sed -i 's/#DAEMON_CONF=""/DAEMON_CONF="\/etc\/hostapd\/hostapd.conf"/' /etc/default/hostapd
 
-echo "Configuring dnsmasq..."
+echo "Configuring dnsmasq (DHCP + DNS)..."
 mv /etc/dnsmasq.conf /etc/dnsmasq.conf.orig || true
 cat > /etc/dnsmasq.conf << EOF
 interface=wlan0
+domain-needed
+bogus-priv
+expand-hosts
+
+# DHCP range for RockTimer network
 dhcp-range=192.168.50.10,192.168.50.100,255.255.255.0,24h
-domain=rocktimer.local
+
+# Make the hostname 'rocktimer' resolve to the Pi 4 (this server)
+address=/rocktimer/${IP_ADDRESS}
+
+# Optional: also support rocktimer.local
 address=/rocktimer.local/${IP_ADDRESS}
+
+# Provide a search domain so some clients can type http://rocktimer
+dhcp-option=option:domain-name,rocktimer
+dhcp-option=option:domain-search,rocktimer
 EOF
 
 echo "Enabling services..."

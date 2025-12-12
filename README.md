@@ -47,6 +47,21 @@ If you have a phone/tablet, you can join the RockTimer Wi‑Fi network and open:
 
 This lets you view live times from your phone and press **Rearm** without using the touchscreen.
 
+### Local hostname: http://rocktimer
+
+If you use the provided Wi‑Fi AP setup, dnsmasq can be configured to resolve:
+
+- `rocktimer` → `192.168.50.1`
+
+So you can type `http://rocktimer` in your browser.
+
+Note: RockTimer itself runs on **port 8080** by default. If you want plain port **80**,
+use the optional Nginx reverse proxy setup:
+
+```bash
+sudo ./setup/setup_nginx_proxy.sh
+```
+
 ### Apple Watch (future)
 
 The idea is to extend the Apple Watch app **“Curling Timer”** so it can display RockTimer times (and optionally arm/rearm).
