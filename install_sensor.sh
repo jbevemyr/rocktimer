@@ -1,5 +1,5 @@
 #!/bin/bash
-# Installation av RockTimer Sensor på Raspberry Pi Zero 2 W
+# Install RockTimer Sensor on Raspberry Pi Zero 2 W
 
 set -e
 
@@ -7,34 +7,34 @@ echo "==================================="
 echo "RockTimer Sensor Installation"
 echo "==================================="
 
-# Kontrollera att vi kör som root
+# Ensure we run as root
 if [ "$EUID" -ne 0 ]; then
-    echo "Kör detta skript som root (sudo)"
+    echo "Run this script as root (sudo)"
     exit 1
 fi
 
-# Fråga efter enhets-ID
+# Ask for device ID
 echo ""
-echo "Vilken position har denna sensor?"
-echo "  1) tee - Vid tee-linjen"
-echo "  2) hog_far - Vid avlägsna hog-linjen"
-read -p "Välj (1 eller 2): " CHOICE
+echo "Where is this sensor located?"
+echo "  1) tee - At the tee line"
+echo "  2) hog_far - At the far hog line"
+read -p "Choose (1 or 2): " CHOICE
 
 case $CHOICE in
     1) DEVICE_ID="tee" ;;
     2) DEVICE_ID="hog_far" ;;
-    *) echo "Ogiltigt val"; exit 1 ;;
+    *) echo "Invalid choice"; exit 1 ;;
 esac
 
-echo "Konfigurerar som: ${DEVICE_ID}"
+echo "Configuring as: ${DEVICE_ID}"
 
-# Installationsväg
+# Install path
 INSTALL_DIR="/opt/rocktimer"
 USER="${SUDO_USER:-$(whoami)}"
 
-echo "Installerar för användare: ${USER}"
+echo "Installing for user: ${USER}"
 
-echo "[1/5] Installerar systemberoenden..."
+echo "[1/5] Installing system dependencies..."
 apt-get update
 apt-get install -y \
     python3-pip \
@@ -42,19 +42,19 @@ apt-get install -y \
     python3-lgpio \
     python3-gpiozero
 
-echo "[2/5] Skapar installationskatalog..."
+echo "[2/5] Creating install directory..."
 mkdir -p ${INSTALL_DIR}
 cp -r . ${INSTALL_DIR}/
 chown -R ${USER}:${USER} ${INSTALL_DIR}
 
-echo "[3/5] Skapar Python virtual environment..."
+echo "[3/5] Creating Python virtual environment..."
 cd ${INSTALL_DIR}
 python3 -m venv --system-site-packages venv
 source venv/bin/activate
 pip install --upgrade pip
 pip install -r requirements-sensor.txt
 
-echo "[4/5] Kopierar och konfigurerar..."
+echo "[4/5] Copying and configuring..."
 if [ ! -f ${INSTALL_DIR}/config.yaml ]; then
     cp ${INSTALL_DIR}/config.yaml.example ${INSTALL_DIR}/config.yaml
 fi
@@ -62,7 +62,7 @@ fi
 # Sätt device_id
 sed -i "s/device_id: \"tee\"/device_id: \"${DEVICE_ID}\"/" ${INSTALL_DIR}/config.yaml
 
-echo "[5/5] Installerar systemd-tjänst..."
+echo "[5/5] Installing systemd service..."
 
 cat > /etc/systemd/system/rocktimer-sensor.service << EOF
 [Unit]
@@ -87,21 +87,21 @@ systemctl enable rocktimer-sensor.service
 
 echo ""
 echo "==================================="
-echo "Installation klar!"
+echo "Installation complete!"
 echo "==================================="
 echo ""
-echo "Enhets-ID: ${DEVICE_ID}"
+echo "Device ID: ${DEVICE_ID}"
 echo ""
-echo "Starta sensorn:"
+echo "Start the sensor:"
 echo "  sudo systemctl start rocktimer-sensor"
 echo ""
-echo "Kontrollera status:"
+echo "Check status:"
 echo "  sudo systemctl status rocktimer-sensor"
 echo ""
-echo "Visa loggar:"
+echo "View logs:"
 echo "  sudo journalctl -u rocktimer-sensor -f"
 echo ""
-echo "Redigera konfigurationen:"
+echo "Edit configuration:"
 echo "  nano ${INSTALL_DIR}/config.yaml"
 echo ""
 

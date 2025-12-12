@@ -1,5 +1,5 @@
 #!/bin/bash
-# Installation av RockTimer Server på Raspberry Pi 4
+# Install RockTimer Server on Raspberry Pi 4
 
 set -e
 
@@ -7,19 +7,19 @@ echo "==================================="
 echo "RockTimer Server Installation"
 echo "==================================="
 
-# Kontrollera att vi kör som root
+# Ensure we run as root
 if [ "$EUID" -ne 0 ]; then
-    echo "Kör detta skript som root (sudo)"
+    echo "Run this script as root (sudo)"
     exit 1
 fi
 
-# Installationsväg
+# Install path
 INSTALL_DIR="/opt/rocktimer"
 USER="${SUDO_USER:-$(whoami)}"
 
-echo "Installerar för användare: ${USER}"
+echo "Installing for user: ${USER}"
 
-echo "[1/5] Installerar systemberoenden..."
+echo "[1/5] Installing system dependencies..."
 apt-get update
 apt-get install -y \
     python3-pip \
@@ -30,26 +30,26 @@ apt-get install -y \
     unclutter \
     espeak-ng
 
-echo "[2/5] Skapar installationskatalog..."
+echo "[2/5] Creating install directory..."
 mkdir -p ${INSTALL_DIR}
 cp -r . ${INSTALL_DIR}/
 chown -R ${USER}:${USER} ${INSTALL_DIR}
 
-echo "[3/5] Skapar Python virtual environment..."
+echo "[3/5] Creating Python virtual environment..."
 cd ${INSTALL_DIR}
 python3 -m venv --system-site-packages venv
 source venv/bin/activate
 pip install --upgrade pip
 pip install -r requirements-server.txt
 
-echo "[4/5] Kopierar konfigurationsfil..."
+echo "[4/5] Copying configuration file..."
 if [ ! -f ${INSTALL_DIR}/config.yaml ]; then
     cp ${INSTALL_DIR}/configs/config-pi4-hog-close.yaml ${INSTALL_DIR}/config.yaml
 fi
 
-echo "[5/5] Installerar systemd-tjänster..."
+echo "[5/5] Installing systemd services..."
 
-# Server-tjänst (körs som root för GPIO-åtkomst)
+# Server service (runs as root for GPIO access)
 cat > /etc/systemd/system/rocktimer-server.service << EOF
 [Unit]
 Description=RockTimer Central Server
@@ -68,7 +68,7 @@ RestartSec=5
 WantedBy=multi-user.target
 EOF
 
-# Kiosk-läge för pekskärm
+# Kiosk mode for touchscreen
 cat > /etc/systemd/system/rocktimer-kiosk.service << EOF
 [Unit]
 Description=RockTimer Kiosk Display
@@ -92,7 +92,7 @@ EOF
 systemctl daemon-reload
 systemctl enable rocktimer-server.service
 
-# Inaktivera skärmsläckare
+# Disable screen blanking
 mkdir -p /home/${USER}/.config/lxsession/LXDE-pi/
 cat > /home/${USER}/.config/lxsession/LXDE-pi/autostart << EOF
 @lxpanel --profile LXDE-pi
@@ -106,18 +106,18 @@ chown -R ${USER}:${USER} /home/${USER}/.config/
 
 echo ""
 echo "==================================="
-echo "Installation klar!"
+echo "Installation complete!"
 echo "==================================="
 echo ""
-echo "Starta servern:"
+echo "Start the server:"
 echo "  sudo systemctl start rocktimer-server"
 echo ""
-echo "Starta kiosk-läge:"
+echo "Start kiosk mode:"
 echo "  sudo systemctl enable rocktimer-kiosk"
 echo "  sudo systemctl start rocktimer-kiosk"
 echo ""
-echo "Webb-UI: http://localhost:8080"
+echo "Web UI: http://localhost:8080"
 echo ""
-echo "Redigera konfigurationen:"
+echo "Edit configuration:"
 echo "  nano ${INSTALL_DIR}/config.yaml"
 echo ""

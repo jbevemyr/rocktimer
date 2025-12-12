@@ -1,33 +1,33 @@
 #!/bin/bash
-# Nätverkskonfiguration för RockTimer
-# Körs på Pi 4 för att sätta upp WiFi Access Point
+# Network configuration for RockTimer
+# Run on Pi 4 to set up a WiFi Access Point
 
 set -e
 
 echo "==================================="
-echo "RockTimer Nätverkskonfiguration"
+echo "RockTimer Network Configuration"
 echo "==================================="
 
-# Kontrollera root
+# Ensure root
 if [ "$EUID" -ne 0 ]; then
-    echo "Kör som root (sudo)"
+    echo "Run as root (sudo)"
     exit 1
 fi
 
-# Variabler
+# Variables
 SSID="RockTimer"
 PASSWORD="curling123"
 IP_ADDRESS="192.168.50.1"
 
-echo "[1/4] Installerar hostapd och dnsmasq..."
+echo "[1/4] Installing hostapd and dnsmasq..."
 apt-get update
 apt-get install -y hostapd dnsmasq
 
-echo "[2/4] Stoppar tjänster..."
+echo "[2/4] Stopping services..."
 systemctl stop hostapd || true
 systemctl stop dnsmasq || true
 
-echo "[3/4] Konfigurerar dhcpcd..."
+echo "[3/4] Configuring dhcpcd..."
 cat >> /etc/dhcpcd.conf << EOF
 
 # RockTimer Access Point
@@ -36,7 +36,7 @@ interface wlan0
     nohook wpa_supplicant
 EOF
 
-echo "[4/4] Konfigurerar hostapd..."
+echo "[4/4] Configuring hostapd..."
 cat > /etc/hostapd/hostapd.conf << EOF
 interface=wlan0
 driver=nl80211
@@ -54,10 +54,10 @@ wpa_pairwise=TKIP
 rsn_pairwise=CCMP
 EOF
 
-# Aktivera hostapd
+# Enable hostapd
 sed -i 's/#DAEMON_CONF=""/DAEMON_CONF="\/etc\/hostapd\/hostapd.conf"/' /etc/default/hostapd
 
-echo "Konfigurerar dnsmasq..."
+echo "Configuring dnsmasq..."
 mv /etc/dnsmasq.conf /etc/dnsmasq.conf.orig || true
 cat > /etc/dnsmasq.conf << EOF
 interface=wlan0
@@ -66,21 +66,21 @@ domain=rocktimer.local
 address=/rocktimer.local/${IP_ADDRESS}
 EOF
 
-echo "Aktiverar tjänster..."
+echo "Enabling services..."
 systemctl unmask hostapd
 systemctl enable hostapd
 systemctl enable dnsmasq
 
 echo ""
 echo "==================================="
-echo "Konfiguration klar!"
+echo "Configuration complete!"
 echo "==================================="
 echo ""
 echo "WiFi SSID: ${SSID}"
-echo "Lösenord: ${PASSWORD}"
+echo "Password: ${PASSWORD}"
 echo "Server IP: ${IP_ADDRESS}"
 echo ""
-echo "Starta om för att aktivera:"
+echo "Reboot to apply:"
 echo "  sudo reboot"
 echo ""
 
