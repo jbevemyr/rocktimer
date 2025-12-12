@@ -1,6 +1,12 @@
 # RockTimer - Curling Timing System
 
-Distributed curling timing system using Raspberry Pi.
+RockTimer is a DIY curling stone timing system that measures split times between the **tee line**, the **near hog line**, and the **far hog line** using simple laser trip sensors.
+
+It is designed for a **3‑Pi setup**:
+- **Pi 4 (server at near hog line)**: runs the central server + touchscreen UI + optional voice announcements
+- **2× Pi Zero 2 W (tee + far hog)**: read sensors and send trigger timestamps over UDP
+
+The goal is to provide a fast, touch-friendly display (and optional voice callouts) for practice and training—without needing external internet or cloud services.
 
 ## Overview
 
