@@ -2,7 +2,7 @@
 //  RockTimerApp.swift
 //  RockTimer WatchKit Extension
 //
-//  Huvudapplikation för RockTimer Apple Watch
+//  Main application for RockTimer Apple Watch
 //
 
 import SwiftUI

@@ -2,7 +2,7 @@
 //  ContentView.swift
 //  RockTimer WatchKit Extension
 //
-//  Curling tidtagning - Apple Watch app
+//  Curling timing - Apple Watch app
 //
 
 import SwiftUI
@@ -12,10 +12,10 @@ struct ContentView: View {
     
     var body: some View {
         TabView {
-            // Huvudvy med tider
+            // Main view with times
             TimesView(viewModel: viewModel)
             
-            // Kontrollvy
+            // Controls view
             ControlView(viewModel: viewModel)
         }
         .tabViewStyle(.carousel)
@@ -32,7 +32,7 @@ struct TimesView: View {
                 // Status
                 StatusBadge(state: viewModel.systemState)
                 
-                // Total tid - stor display
+                // Total time - large display
                 VStack(spacing: 2) {
                     Text("TOTAL")
                         .font(.system(size: 10, weight: .medium))
@@ -44,7 +44,7 @@ struct TimesView: View {
                 }
                 .padding(.vertical, 8)
                 
-                // Deltider
+                // Splits
                 HStack(spacing: 16) {
                     TimeBlock(
                         label: "T→H",
@@ -78,7 +78,7 @@ struct ControlView: View {
                 }) {
                     HStack {
                         Image(systemName: "target")
-                        Text("Arma")
+                        Text("Arm")
                     }
                     .font(.headline)
                 }
@@ -90,7 +90,7 @@ struct ControlView: View {
                 }) {
                     HStack {
                         Image(systemName: "xmark.circle")
-                        Text("Avbryt")
+                        Text("Cancel")
                     }
                     .font(.headline)
                 }
@@ -98,12 +98,12 @@ struct ControlView: View {
                 .tint(.red)
             }
             
-            // Anslutningsstatus
+            // Connection status
             HStack {
                 Circle()
                     .fill(viewModel.isConnected ? Color.green : Color.red)
                     .frame(width: 8, height: 8)
-                Text(viewModel.isConnected ? "Ansluten" : "Ej ansluten")
+                Text(viewModel.isConnected ? "Connected" : "Disconnected")
                     .font(.caption2)
                     .foregroundColor(.secondary)
             }
@@ -158,10 +158,10 @@ enum SystemState: String, Codable {
     
     var displayText: String {
         switch self {
-        case .idle: return "REDO"
-        case .armed: return "ARMAT"
-        case .measuring: return "MÄTER..."
-        case .completed: return "KLAR"
+        case .idle: return "READY"
+        case .armed: return "ARMED"
+        case .measuring: return "MEASURING..."
+        case .completed: return "DONE"
         }
     }
     

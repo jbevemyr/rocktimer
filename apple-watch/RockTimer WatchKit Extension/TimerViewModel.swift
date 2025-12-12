@@ -2,7 +2,7 @@
 //  TimerViewModel.swift
 //  RockTimer WatchKit Extension
 //
-//  ViewModel för att hantera kommunikation med RockTimer-servern
+//  ViewModel to handle communication with the RockTimer server
 //
 
 import Foundation
@@ -18,7 +18,7 @@ class TimerViewModel: ObservableObject {
     @Published var isConnected: Bool = false
     
     // MARK: - Configuration
-    /// Ändra denna till din Pi 4:s IP-adress
+    /// Change this to your Pi 4 IP address
     private let serverURL = "http://192.168.50.1:8080"
     
     private var pollingTimer: Timer?
@@ -53,12 +53,12 @@ class TimerViewModel: ObservableObject {
     
     // MARK: - Polling
     private func startPolling() {
-        // Polla servern var sekund
+        // Poll the server every second
         pollingTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
             self?.fetchStatus()
         }
         
-        // Hämta status direkt
+        // Fetch status immediately
         fetchStatus()
     }
     
@@ -77,7 +77,7 @@ class TimerViewModel: ObservableObject {
         URLSession.shared.dataTask(with: request) { [weak self] data, response, error in
             DispatchQueue.main.async {
                 if let error = error {
-                    print("Fel vid hämtning av status: \(error)")
+                    print("Error fetching status: \(error)")
                     self?.isConnected = false
                     return
                 }
@@ -102,18 +102,18 @@ class TimerViewModel: ObservableObject {
                 systemState = state
             }
             
-            // Uppdatera tider
+            // Update times
             teeToHogMs = response.session.tee_to_hog_close_ms
             hogToHogMs = response.session.hog_to_hog_ms
             totalMs = response.session.total_ms
             
-            // Vibrera vid ny tid
+            // Vibrate on completion
             if response.session.is_complete && systemState != .completed {
                 WKInterfaceDevice.current().play(.success)
             }
             
         } catch {
-            print("Fel vid parsning av status: \(error)")
+            print("Error parsing status: \(error)")
         }
     }
     

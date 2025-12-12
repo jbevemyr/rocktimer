@@ -1,52 +1,51 @@
 # RockTimer Apple Watch App
 
-Apple Watch-app för att visa curling-tider och arma tidtagningssystemet.
+Apple Watch app for displaying curling times and arming the timing system.
 
-## Bygga appen
+## Building the app
 
-### Förutsättningar
+### Requirements
 - macOS med Xcode 15+
-- Apple Developer-konto (för att köra på fysisk klocka)
+- Apple Developer account (to run on a physical watch)
 
-### Steg
+### Steps
 
-1. Öppna `RockTimer.xcodeproj` i Xcode
+1. Open `RockTimer.xcodeproj` in Xcode
 
-2. Konfigurera server-adressen i `TimerViewModel.swift`:
+2. Configure the server URL in `TimerViewModel.swift`:
    ```swift
    private let serverURL = "http://192.168.50.1:8080"
    ```
 
-3. Välj "RockTimer WatchKit App" som target
+3. Select "RockTimer WatchKit App" as the target
 
-4. Kör på simulator eller fysisk Apple Watch
+4. Run on the simulator or a physical Apple Watch
 
-## Funktioner
+## Features
 
-- **Visa tider**: Total tid, Tee→Hog, Hog→Hog
-- **Arma system**: Starta en ny mätning
-- **Avbryt**: Avbryt pågående mätning
-- **Haptisk feedback**: Vibration vid nya tider
+- **Display times**: Total time, Tee→Hog, Hog→Hog
+- **Arm system**: Start a new measurement
+- **Cancel**: Cancel the current measurement
+- **Haptic feedback**: Vibrate on new times
 
-## Nätverkskonfiguration
+## Network configuration
 
-Apple Watch kommunicerar via iPhone när den inte är på samma WiFi.
-För bästa resultat, se till att iPhone är ansluten till samma WiFi (192.168.50.x).
+Apple Watch communicates via the paired iPhone when it is not on the same Wi‑Fi.
+For best results, ensure the iPhone is connected to the same Wi‑Fi (192.168.50.x).
 
-### Alternativ: WatchConnectivity
+### Optional: WatchConnectivity
 
-För en mer robust lösning kan appen modifieras att använda WatchConnectivity
-för att kommunicera via den parade iPhonen. Detta kräver en kompletterande
-iOS-app.
+For a more robust solution, the app can be modified to use WatchConnectivity
+to communicate via the paired iPhone. This requires a companion iOS app.
 
-## Felsökning
+## Troubleshooting
 
-### Appen kan inte ansluta
-1. Kontrollera att Pi 4 är igång och nåbar
-2. Verifiera att iPhone är på samma WiFi-nätverk
-3. Testa att öppna http://192.168.50.1:8080 i Safari på iPhone
+### The app can't connect
+1. Check that the Pi 4 is running and reachable
+2. Verify that the iPhone is on the same Wi‑Fi network
+3. Try opening `http://192.168.50.1:8080` in Safari on the iPhone
 
-### Tider uppdateras inte
-- Appen pollar servern var sekund
-- Kontrollera nätverksanslutningen
+### Times do not update
+- The app polls the server every second
+- Check network connectivity
 
