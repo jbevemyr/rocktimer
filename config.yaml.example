@@ -1,6 +1,6 @@
-# RockTimer Konfiguration
+# RockTimer Configuration
 
-# Enhets-ID (för sensorer: tee, hog_close, hog_far)
+# Device ID (for sensors: tee, hog_close, hog_far)
 device_id: "tee"
 
 # GPIO
@@ -8,10 +8,10 @@ gpio:
   sensor_pin: 17
   debounce_ms: 50
 
-# Server-adress (för sensorer)
+# Server address (for sensors)
 server:
   host: "192.168.50.1"
-  port: 5000          # UDP-port
-  http_port: 8080     # Webb-UI (endast Pi 4)
-  udp_port: 5000      # Samma som port (endast Pi 4)
-  enable_speech: true # Läs upp tider med espeak-ng
+  port: 5000          # UDP port
+  http_port: 8080     # Web UI (Pi 4 only)
+  udp_port: 5000      # Same as port (Pi 4 only)
+  enable_speech: true # Enable speech announcements

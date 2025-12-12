@@ -3,8 +3,8 @@
 device_id: "hog_close"
 
 gpio:
-  sensor_pin: 17      # Tidtagningssensor (laser)
-  arm_pin: 27         # Arm-sensor (IR) - håll handen framför för att arma
+  sensor_pin: 17      # Timing sensor (laser)
+  arm_pin: 27         # Arm sensor (IR) - hold hand in front to arm
   debounce_ms: 50
 
 server:
