@@ -15,6 +15,88 @@ Distributed curling timing system using Raspberry Pi.
 
 Sensors send triggers to the server. The server ignores them unless the system is armed.
 
+## Network (Pi 4 as Wi‑Fi Access Point)
+
+RockTimer is designed to run on a **local Wi‑Fi network** created by the Pi 4:
+
+- **Pi 4**: runs the server + acts as a **Wi‑Fi Access Point** (AP), typically `192.168.50.1`
+- **Pi Zero 2 W** units: connect to the Pi 4 Wi‑Fi and send UDP triggers to the server
+
+This repo includes a helper script to configure the AP on the Pi 4:
+
+```bash
+sudo ./setup/setup_network.sh
+```
+
+After running it:
+- Connect your **Pi Zero 2 W** devices to the SSID shown by the script (default `RockTimer`)
+- Verify they get an IP in the `192.168.50.x` range
+- Ensure the server IP in the sensor config is set to the Pi 4 address (e.g. `192.168.50.1`)
+
+## Time sync (Chrony)
+
+Accurate timing requires the clocks on all devices to be synchronized.
+Use **chrony** with the Pi 4 as the local time server.
+
+### 1) Install chrony
+
+On all Pi’s:
+
+```bash
+sudo apt-get update
+sudo apt-get install -y chrony
+```
+
+### 2) Pi 4 (server) configuration
+
+Edit `/etc/chrony/chrony.conf` on the Pi 4 and add something like:
+
+```conf
+# Allow LAN clients (RockTimer Wi‑Fi network)
+allow 192.168.50.0/24
+
+# Optional: keep stable even without internet
+local stratum 10
+```
+
+Restart:
+
+```bash
+sudo systemctl restart chrony
+```
+
+### 3) Pi Zero 2 W (clients) configuration
+
+Edit `/etc/chrony/chrony.conf` on each Pi Zero and add:
+
+```conf
+# Use the Pi 4 as the time source
+server 192.168.50.1 iburst prefer
+```
+
+Restart:
+
+```bash
+sudo systemctl restart chrony
+```
+
+### 4) Verify sync
+
+On clients:
+
+```bash
+chronyc tracking
+chronyc sources -v
+```
+
+You should see the Pi 4 (`192.168.50.1`) as the preferred source and a small offset.
+
+### Example config files
+
+Copy-ready examples are available in:
+- `setup/chrony-server.conf`
+- `setup/chrony-client.conf`
+
 ## Installation
 
 ### Pi 4 (Server)
