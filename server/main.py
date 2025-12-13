@@ -357,7 +357,9 @@ class RockTimerServer:
             # Format exactly like the UI and speak it
             formatted = f"{seconds:.2f}"  # "3.18"
             whole, dec = formatted.split('.')
-            text = f"{whole} point {int(dec)}"  # "3 point 18"
+            # Speak each decimal digit to avoid "ninety seven" (e.g. "2.97" -> "2 point 9 7")
+            dec_digits = " ".join(dec)
+            text = f"{whole} point {dec_digits}"  # "3 point 1 8"
             
             logger.info(f"Speaking: '{text}'")
             
@@ -365,14 +367,18 @@ class RockTimerServer:
             speak_script = '/opt/piper/speak.sh'
             
             if os.path.exists(speak_script):
-                logger.info(f"Running: {speak_script} '{text}'")
-                result = subprocess.run(
+                # Non-blocking so UI updates aren't delayed while TTS plays
+                env = dict(os.environ)
+                env.setdefault('HOME', '/root')
+                env.setdefault('ALSA_CARD', '2')
+                logger.info(f"Spawning: {speak_script} '{text}'")
+                subprocess.Popen(
                     [speak_script, text],
-                    capture_output=True,
-                    text=True
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                    env=env,
+                    start_new_session=True
                 )
-                if result.returncode != 0:
-                    logger.error(f"speak.sh error: {result.stderr}")
             else:
                 logger.warning("speak.sh not found, using espeak-ng")
                 subprocess.Popen(
@@ -394,9 +400,10 @@ class RockTimerServer:
         self.session.reset()
         self.state = SystemState.ARMED
         logger.info("ARMED")
+        # Broadcast first so UI updates instantly, then speak (which is non-blocking anyway)
+        self.broadcast_state()
         if self.speech_settings.get('speak_ready', True):
             self._speak_phrase("ready to go")
-        self.broadcast_state()
         return True
     
     def disarm(self):
