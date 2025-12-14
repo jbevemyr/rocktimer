@@ -78,6 +78,7 @@ set -euo pipefail
 
 # Simple, robust Piper TTS helper:
 # - Generates raw audio once
+# - Prefers the Pi analog jack if present (bcm2835 Headphones)
 # - Tries a few ALSA output devices until one works
 # - Logs errors to /var/log/rocktimer-tts.log
 
@@ -95,16 +96,18 @@ RATE="22050"
 FMT="S16_LE"
 CH="1"
 
+log() { echo "$(date -Is) $*" >> "${LOG}"; }
+
 if [ ! -x "${PIPER}" ]; then
-  echo "$(date -Is) ERROR: piper not found at ${PIPER}" >> "${LOG}"
+  log "ERROR: piper not found at ${PIPER}"
   exit 1
 fi
 if [ ! -f "${MODEL}" ]; then
-  echo "$(date -Is) ERROR: model not found at ${MODEL}" >> "${LOG}"
+  log "ERROR: model not found at ${MODEL}"
   exit 1
 fi
 if [ ! -x "${APLAY}" ]; then
-  echo "$(date -Is) ERROR: aplay not found at ${APLAY}" >> "${LOG}"
+  log "ERROR: aplay not found at ${APLAY}"
   exit 1
 fi
 
@@ -112,7 +115,7 @@ tmp="$(mktemp /tmp/rocktimer-tts.XXXXXX.raw)"
 trap 'rm -f "$tmp"' EXIT
 
 if ! echo "${TEXT}" | "${PIPER}" --model "${MODEL}" --output-raw > "${tmp}" 2>> "${LOG}"; then
-  echo "$(date -Is) ERROR: piper failed" >> "${LOG}"
+  log "ERROR: piper failed"
   exit 1
 fi
 
@@ -122,16 +125,24 @@ if [ -n "${ALSA_DEVICE:-}" ]; then
   devices+=("${ALSA_DEVICE}")
 fi
 
+# Prefer analog jack if present (bcm2835 Headphones)
+hp_card="$("${APLAY}" -l 2>/dev/null | awk -F'[: ]+' '/card [0-9]+:.*Headphones/ {print $2; exit}')"
+if [ -n "${hp_card}" ]; then
+  devices+=("hw:${hp_card},0" "plughw:${hp_card},0")
+fi
+
 # Common fallbacks (card numbering can change across reboots)
-devices+=("default" "plughw:0,0" "plughw:1,0" "plughw:2,0" "hw:0,0" "hw:1,0" "hw:2,0")
+devices+=("default" "hw:0,0" "plughw:0,0" "hw:1,0" "plughw:1,0" "hw:2,0" "plughw:2,0")
 
 for dev in "${devices[@]}"; do
+  log "Trying device: ${dev}"
   if "${APLAY}" -q -D "${dev}" -r "${RATE}" -f "${FMT}" -c "${CH}" "${tmp}" 2>> "${LOG}"; then
+    log "OK device: ${dev}"
     exit 0
   fi
 done
 
-echo "$(date -Is) ERROR: no working ALSA device (tried: ${devices[*]})" >> "${LOG}"
+log "ERROR: no working ALSA device (tried: ${devices[*]})"
 exit 1
 EOF
 chmod +x "${PIPER_DIR}/speak.sh"
