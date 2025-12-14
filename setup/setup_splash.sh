@@ -55,8 +55,81 @@ if command -v fbset >/dev/null 2>&1; then
 fi
 
 # Render everything into one image to avoid text-overlap quirks in Plymouth text rendering.
+W="${SPLASH_W}"
+H="${SPLASH_H}"
+
+# Pre-compute all SVG numeric values (bash can't do floating point math natively).
+calc() { awk -v W="$W" -v H="$H" "BEGIN{printf \"%.2f\", ($1)}"; }
+
+ICE1_Y="$(calc 'H*0.74')"
+ICE1_C1X="$(calc 'W*0.25')"
+ICE1_C1Y="$(calc 'H*0.70')"
+ICE1_C2X="$(calc 'W*0.55')"
+ICE1_C2Y="$(calc 'H*0.80')"
+ICE1_X2="$(calc 'W')"
+ICE1_Y2="$(calc 'H*0.72')"
+
+ICE2_Y="$(calc 'H*0.80')"
+ICE2_C1X="$(calc 'W*0.30')"
+ICE2_C1Y="$(calc 'H*0.75')"
+ICE2_C2X="$(calc 'W*0.60')"
+ICE2_C2Y="$(calc 'H*0.88')"
+ICE2_X2="$(calc 'W')"
+ICE2_Y2="$(calc 'H*0.80')"
+
+STONE_TX="$(calc 'W/2')"
+STONE_TY="$(calc 'H*0.40')"
+STONE_SHADOW_CY="$(calc 'H*0.18')"
+STONE_SHADOW_RX="$(calc 'W*0.16')"
+STONE_SHADOW_RY="$(calc 'H*0.045')"
+
+STONE1_CY="$(calc 'H*0.10')"
+STONE1_RX="$(calc 'W*0.17')"
+STONE1_RY="$(calc 'H*0.055')"
+STONE2_CY="$(calc 'H*0.08')"
+STONE2_RX="$(calc 'W*0.15')"
+STONE2_RY="$(calc 'H*0.045')"
+
+RBAND_CY="$(calc 'H*0.12')"
+RBAND1_RX="$(calc 'W*0.12')"
+RBAND1_RY="$(calc 'H*0.03')"
+RBAND2_RX="$(calc 'W*0.10')"
+RBAND2_RY="$(calc 'H*0.024')"
+
+HL_CX="$(calc '-W*0.03')"
+HL_CY="$(calc 'H*0.06')"
+HL_RX="$(calc 'W*0.06')"
+HL_RY="$(calc 'H*0.02')"
+
+HANDLE_DY="$(calc '-H*0.01')"
+H_RECT_X="$(calc '-W*0.06')"
+H_RECT_Y="$(calc '-H*0.11')"
+H_RECT_W="$(calc 'W*0.12')"
+H_RECT_H="$(calc 'H*0.06')"
+H_RECT_RX="$(calc 'H*0.02')"
+
+H_STEM_X="$(calc '-W*0.02')"
+H_STEM_Y="$(calc '-H*0.16')"
+H_STEM_W="$(calc 'W*0.04')"
+H_STEM_H="$(calc 'H*0.06')"
+H_STEM_RX="$(calc 'H*0.015')"
+
+H_TOP_CY="$(calc '-H*0.16')"
+H_TOP_RX="$(calc 'W*0.055')"
+H_TOP_RY="$(calc 'H*0.02')"
+
+H_HI_CX="$(calc '-W*0.015')"
+H_HI_CY="$(calc '-H*0.165')"
+H_HI_RX="$(calc 'W*0.02')"
+H_HI_RY="$(calc 'H*0.012')"
+
+TEXT_TITLE_Y="$(calc 'H*0.70')"
+TEXT_SUB_Y="$(calc 'H*0.82')"
+FONT_TITLE="$(calc 'H*0.12')"
+FONT_SUB="$(calc 'H*0.055')"
+
 cat > "${THEME_DIR}/splash.svg" <<EOF
-<svg xmlns="http://www.w3.org/2000/svg" width="${SPLASH_W}" height="${SPLASH_H}" viewBox="0 0 ${SPLASH_W} ${SPLASH_H}">
+<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0%" stop-color="#0b1220"/>
@@ -75,44 +148,44 @@ cat > "${THEME_DIR}/splash.svg" <<EOF
   </defs>
 
   <!-- Background -->
-  <rect x="0" y="0" width="${SPLASH_W}" height="${SPLASH_H}" fill="url(#bg)"/>
-  <rect x="0" y="0" width="${SPLASH_W}" height="${SPLASH_H}" fill="url(#iceGlow)"/>
+  <rect x="0" y="0" width="${W}" height="${H}" fill="url(#bg)"/>
+  <rect x="0" y="0" width="${W}" height="${H}" fill="url(#iceGlow)"/>
 
   <!-- Subtle ice lines -->
   <g opacity="0.12">
-    <path d="M 0 ${SPLASH_H*0.74} C ${SPLASH_W*0.25} ${SPLASH_H*0.70}, ${SPLASH_W*0.55} ${SPLASH_H*0.80}, ${SPLASH_W} ${SPLASH_H*0.72}" stroke="#b7d6ff" stroke-width="2" fill="none"/>
-    <path d="M 0 ${SPLASH_H*0.80} C ${SPLASH_W*0.30} ${SPLASH_H*0.75}, ${SPLASH_W*0.60} ${SPLASH_H*0.88}, ${SPLASH_W} ${SPLASH_H*0.80}" stroke="#b7d6ff" stroke-width="2" fill="none"/>
+    <path d="M 0 ${ICE1_Y} C ${ICE1_C1X} ${ICE1_C1Y}, ${ICE1_C2X} ${ICE1_C2Y}, ${ICE1_X2} ${ICE1_Y2}" stroke="#b7d6ff" stroke-width="2" fill="none"/>
+    <path d="M 0 ${ICE2_Y} C ${ICE2_C1X} ${ICE2_C1Y}, ${ICE2_C2X} ${ICE2_C2Y}, ${ICE2_X2} ${ICE2_Y2}" stroke="#b7d6ff" stroke-width="2" fill="none"/>
   </g>
 
   <!-- Curling stone (simple illustration) -->
-  <g filter="url(#shadow)" transform="translate(${SPLASH_W/2}, ${SPLASH_H*0.40})">
+  <g filter="url(#shadow)" transform="translate(${STONE_TX}, ${STONE_TY})">
     <!-- stone base shadow -->
-    <ellipse cx="0" cy="${SPLASH_H*0.18}" rx="${SPLASH_W*0.16}" ry="${SPLASH_H*0.045}" fill="#000" opacity="0.35"/>
+    <ellipse cx="0" cy="${STONE_SHADOW_CY}" rx="${STONE_SHADOW_RX}" ry="${STONE_SHADOW_RY}" fill="#000" opacity="0.35"/>
 
     <!-- stone body -->
-    <ellipse cx="0" cy="${SPLASH_H*0.10}" rx="${SPLASH_W*0.17}" ry="${SPLASH_H*0.055}" fill="#1a1a1a"/>
-    <ellipse cx="0" cy="${SPLASH_H*0.08}" rx="${SPLASH_W*0.15}" ry="${SPLASH_H*0.045}" fill="#2a2a2a"/>
+    <ellipse cx="0" cy="${STONE1_CY}" rx="${STONE1_RX}" ry="${STONE1_RY}" fill="#1a1a1a"/>
+    <ellipse cx="0" cy="${STONE2_CY}" rx="${STONE2_RX}" ry="${STONE2_RY}" fill="#2a2a2a"/>
 
     <!-- running band -->
-    <ellipse cx="0" cy="${SPLASH_H*0.12}" rx="${SPLASH_W*0.12}" ry="${SPLASH_H*0.03}" fill="#111"/>
-    <ellipse cx="0" cy="${SPLASH_H*0.12}" rx="${SPLASH_W*0.10}" ry="${SPLASH_H*0.024}" fill="#0a0a0a"/>
+    <ellipse cx="0" cy="${RBAND_CY}" rx="${RBAND1_RX}" ry="${RBAND1_RY}" fill="#111"/>
+    <ellipse cx="0" cy="${RBAND_CY}" rx="${RBAND2_RX}" ry="${RBAND2_RY}" fill="#0a0a0a"/>
 
     <!-- top highlight -->
-    <ellipse cx="${-SPLASH_W*0.03}" cy="${SPLASH_H*0.06}" rx="${SPLASH_W*0.06}" ry="${SPLASH_H*0.02}" fill="#ffffff" opacity="0.10" filter="url(#soft)"/>
+    <ellipse cx="${HL_CX}" cy="${HL_CY}" rx="${HL_RX}" ry="${HL_RY}" fill="#ffffff" opacity="0.10" filter="url(#soft)"/>
 
     <!-- handle -->
-    <g transform="translate(0, ${-SPLASH_H*0.01})">
-      <rect x="${-SPLASH_W*0.06}" y="${-SPLASH_H*0.11}" width="${SPLASH_W*0.12}" height="${SPLASH_H*0.06}" rx="${SPLASH_H*0.02}" fill="#c8102e"/>
-      <rect x="${-SPLASH_W*0.02}" y="${-SPLASH_H*0.16}" width="${SPLASH_W*0.04}" height="${SPLASH_H*0.06}" rx="${SPLASH_H*0.015}" fill="#a20e25"/>
-      <ellipse cx="0" cy="${-SPLASH_H*0.16}" rx="${SPLASH_W*0.055}" ry="${SPLASH_H*0.02}" fill="#e21a3b"/>
-      <ellipse cx="${-SPLASH_W*0.015}" cy="${-SPLASH_H*0.165}" rx="${SPLASH_W*0.02}" ry="${SPLASH_H*0.012}" fill="#ffffff" opacity="0.18"/>
+    <g transform="translate(0, ${HANDLE_DY})">
+      <rect x="${H_RECT_X}" y="${H_RECT_Y}" width="${H_RECT_W}" height="${H_RECT_H}" rx="${H_RECT_RX}" fill="#c8102e"/>
+      <rect x="${H_STEM_X}" y="${H_STEM_Y}" width="${H_STEM_W}" height="${H_STEM_H}" rx="${H_STEM_RX}" fill="#a20e25"/>
+      <ellipse cx="0" cy="${H_TOP_CY}" rx="${H_TOP_RX}" ry="${H_TOP_RY}" fill="#e21a3b"/>
+      <ellipse cx="${H_HI_CX}" cy="${H_HI_CY}" rx="${H_HI_RX}" ry="${H_HI_RY}" fill="#ffffff" opacity="0.18"/>
     </g>
   </g>
 
   <!-- Text -->
   <g text-anchor="middle" font-family="DejaVu Sans, Arial, sans-serif">
-    <text x="${SPLASH_W/2}" y="${SPLASH_H*0.70}" font-size="${SPLASH_H*0.12}" fill="#ffffff" font-weight="700">${TITLE}</text>
-    <text x="${SPLASH_W/2}" y="${SPLASH_H*0.82}" font-size="${SPLASH_H*0.055}" fill="#c8d7ff" opacity="0.95">${SUBTITLE}</text>
+    <text x="${STONE_TX}" y="${TEXT_TITLE_Y}" font-size="${FONT_TITLE}" fill="#ffffff" font-weight="700">${TITLE}</text>
+    <text x="${STONE_TX}" y="${TEXT_SUB_Y}" font-size="${FONT_SUB}" fill="#c8d7ff" opacity="0.95">${SUBTITLE}</text>
   </g>
 </svg>
 EOF
