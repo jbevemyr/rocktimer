@@ -158,10 +158,13 @@ class RockTimerServer:
         """
         env = dict(os.environ)
         env.setdefault('HOME', '/root')
-        env.setdefault('ALSA_CARD', '2')
         alsa_device = self.config.get('server', {}).get('alsa_device')
         if alsa_device:
             env['ALSA_DEVICE'] = str(alsa_device)
+        # Optional: only set ALSA_CARD if explicitly configured.
+        alsa_card = self.config.get('server', {}).get('alsa_card')
+        if alsa_card is not None:
+            env['ALSA_CARD'] = str(alsa_card)
         return env
     
     def _load_config(self, config_path: Path) -> dict:
@@ -345,7 +348,7 @@ class RockTimerServer:
                     ['/usr/bin/espeak-ng', '-v', 'en', '-s', '150', text],
                     stdout=subprocess.DEVNULL,
                     stderr=subprocess.DEVNULL,
-                    env={'ALSA_CARD': '2', 'HOME': '/root'}
+                    env=self._tts_env()
                 )
         except Exception as e:
             logger.error(f"TTS error: {e}")
@@ -397,7 +400,7 @@ class RockTimerServer:
                     ['/usr/bin/espeak-ng', '-v', 'en', '-s', '150', text],
                     stdout=subprocess.DEVNULL,
                     stderr=subprocess.DEVNULL,
-                    env={'ALSA_CARD': '2', 'HOME': '/root'}
+                    env=self._tts_env()
                 )
         except FileNotFoundError:
             logger.warning("TTS not installed")
