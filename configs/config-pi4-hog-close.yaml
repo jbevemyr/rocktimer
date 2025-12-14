@@ -12,3 +12,4 @@ server:
   http_port: 8080
   udp_port: 5000
   alsa_device: "hw:0,0"
+  auto_arm_on_start: true

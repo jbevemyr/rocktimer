@@ -507,6 +507,9 @@ async def lifespan(app: FastAPI):
     server._loop = asyncio.get_running_loop()
     server.setup_gpio()
     server.start_udp_listener()
+    # Optional: arm immediately on boot so you don't need to press Rearm the first time.
+    if server.config.get('server', {}).get('auto_arm_on_start', False):
+        server.arm()
     yield
     server.stop_udp_listener()
     # gpiozero hanterar cleanup automatiskt
