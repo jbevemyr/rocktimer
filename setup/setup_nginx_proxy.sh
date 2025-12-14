@@ -30,7 +30,30 @@ map $http_upgrade $connection_upgrade {
 
 server {
     listen 80;
-    server_name rocktimer rocktimer.local 192.168.50.1;
+    # Catch all Host headers. This matters because phones may request
+    # connectivity-check domains (Apple/Google/Microsoft) that we map to this IP.
+    server_name _;
+
+    # Captive portal / connectivity check endpoints:
+    # - Android/Google: generate_204 should return HTTP 204
+    location = /generate_204 { return 204; }
+    location = /gen_204 { return 204; }
+
+    # - iOS: hotspot-detect expects "Success"
+    location = /hotspot-detect.html {
+        default_type text/html;
+        return 200 "Success";
+    }
+
+    # - Microsoft: expected small text files
+    location = /connecttest.txt {
+        default_type text/plain;
+        return 200 "Microsoft Connect Test";
+    }
+    location = /ncsi.txt {
+        default_type text/plain;
+        return 200 "Microsoft NCSI";
+    }
 
     location / {
         proxy_pass http://127.0.0.1:8080;

@@ -74,6 +74,18 @@ address=/rocktimer/${IP_ADDRESS}
 # Optional: also support rocktimer.local
 address=/rocktimer.local/${IP_ADDRESS}
 
+# Help phones accept this Wi-Fi even without internet by answering common
+# captive-portal / connectivity check domains locally.
+# (They will resolve to the Pi 4, and nginx on port 80 can respond.)
+address=/connectivitycheck.gstatic.com/${IP_ADDRESS}
+address=/clients3.google.com/${IP_ADDRESS}
+address=/connectivitycheck.android.com/${IP_ADDRESS}
+address=/captive.apple.com/${IP_ADDRESS}
+address=/www.msftconnecttest.com/${IP_ADDRESS}
+address=/msftconnecttest.com/${IP_ADDRESS}
+address=/www.msftncsi.com/${IP_ADDRESS}
+address=/msftncsi.com/${IP_ADDRESS}
+
 # Provide a search domain so some clients can type http://rocktimer
 dhcp-option=option:domain-name,rocktimer
 dhcp-option=option:domain-search,rocktimer

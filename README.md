@@ -72,6 +72,24 @@ use the optional Nginx reverse proxy setup:
 sudo ./setup/setup_nginx_proxy.sh
 ```
 
+### Phones complaining about "No Internet" (optional)
+
+If the Pi 4 Wi‑Fi network has no upstream internet (common for RockTimer), phones may show a warning like
+“No internet” and sometimes try to switch away from Wi‑Fi.
+
+RockTimer can reduce this annoyance by answering common captive-portal / connectivity checks locally:
+
+- `setup/setup_network.sh` adds dnsmasq rules that map those check domains to the Pi 4 IP
+- `setup/setup_nginx_proxy.sh` (port 80) returns the expected small responses (204/Success/text)
+
+If you already set up the AP and/or nginx earlier, re-run the scripts after pulling updates:
+
+```bash
+sudo ./setup/setup_network.sh
+sudo ./setup/setup_nginx_proxy.sh
+sudo reboot
+```
+
 ## Boot splash screen (optional)
 
 If you want a simple boot splash during OS startup that shows:
