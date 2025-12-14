@@ -298,7 +298,8 @@ sudo raspi-config
 amixer cset numid=3 1
 
 # Test Piper (Coqui TTS via piper binary):
-echo "ready to go" | /opt/piper/piper --model /opt/piper/voices/en_US-lessac-medium.onnx --output-raw | /usr/bin/aplay -r 22050 -f S16_LE -c 1 -D plughw:2,0
+# NOTE: ALSA card numbers can change across reboots, so avoid hardcoding plughw:X,Y unless you know the correct device.
+echo "ready to go" | /opt/piper/piper --model /opt/piper/voices/en_US-lessac-medium.onnx --output-raw | /usr/bin/aplay -r 22050 -f S16_LE -c 1 -D default
 
 # Or test via the helper script used by the server:
 /opt/piper/speak.sh "ready to go"

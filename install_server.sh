@@ -74,8 +74,65 @@ fi
 # Install the helper script the server uses
 cat > "${PIPER_DIR}/speak.sh" << 'EOF'
 #!/bin/bash
-TEXT="$1"
-echo "$TEXT" | /opt/piper/piper --model /opt/piper/voices/en_US-lessac-medium.onnx --output-raw 2>/dev/null | /usr/bin/aplay -r 22050 -f S16_LE -c 1 -D plughw:2,0 -q 2>/dev/null
+set -euo pipefail
+
+# Simple, robust Piper TTS helper:
+# - Generates raw audio once
+# - Tries a few ALSA output devices until one works
+# - Logs errors to /var/log/rocktimer-tts.log
+
+TEXT="${*:-}"
+if [ -z "${TEXT}" ]; then
+  exit 0
+fi
+
+PIPER="/opt/piper/piper"
+MODEL="/opt/piper/voices/en_US-lessac-medium.onnx"
+APLAY="/usr/bin/aplay"
+LOG="/var/log/rocktimer-tts.log"
+
+RATE="22050"
+FMT="S16_LE"
+CH="1"
+
+if [ ! -x "${PIPER}" ]; then
+  echo "$(date -Is) ERROR: piper not found at ${PIPER}" >> "${LOG}"
+  exit 1
+fi
+if [ ! -f "${MODEL}" ]; then
+  echo "$(date -Is) ERROR: model not found at ${MODEL}" >> "${LOG}"
+  exit 1
+fi
+if [ ! -x "${APLAY}" ]; then
+  echo "$(date -Is) ERROR: aplay not found at ${APLAY}" >> "${LOG}"
+  exit 1
+fi
+
+tmp="$(mktemp /tmp/rocktimer-tts.XXXXXX.raw)"
+trap 'rm -f "$tmp"' EXIT
+
+if ! echo "${TEXT}" | "${PIPER}" --model "${MODEL}" --output-raw > "${tmp}" 2>> "${LOG}"; then
+  echo "$(date -Is) ERROR: piper failed" >> "${LOG}"
+  exit 1
+fi
+
+# If ALSA_DEVICE is set, try it first.
+devices=()
+if [ -n "${ALSA_DEVICE:-}" ]; then
+  devices+=("${ALSA_DEVICE}")
+fi
+
+# Common fallbacks (card numbering can change across reboots)
+devices+=("default" "plughw:0,0" "plughw:1,0" "plughw:2,0" "hw:0,0" "hw:1,0" "hw:2,0")
+
+for dev in "${devices[@]}"; do
+  if "${APLAY}" -q -D "${dev}" -r "${RATE}" -f "${FMT}" -c "${CH}" "${tmp}" 2>> "${LOG}"; then
+    exit 0
+  fi
+done
+
+echo "$(date -Is) ERROR: no working ALSA device (tried: ${devices[*]})" >> "${LOG}"
+exit 1
 EOF
 chmod +x "${PIPER_DIR}/speak.sh"
 
