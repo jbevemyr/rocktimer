@@ -91,12 +91,16 @@ PIPER="/opt/piper/piper"
 MODEL="/opt/piper/voices/en_US-lessac-medium.onnx"
 APLAY="/usr/bin/aplay"
 LOG="/var/log/rocktimer-tts.log"
+MKTEMP="/usr/bin/mktemp"
+RM="/bin/rm"
+DATE="/usr/bin/date"
+AWK="/usr/bin/awk"
 
 RATE="22050"
 FMT="S16_LE"
 CH="1"
 
-log() { echo "$(date -Is) $*" >> "${LOG}"; }
+log() { echo "$("${DATE}" -Is) $*" >> "${LOG}"; }
 
 if [ ! -x "${PIPER}" ]; then
   log "ERROR: piper not found at ${PIPER}"
@@ -110,9 +114,17 @@ if [ ! -x "${APLAY}" ]; then
   log "ERROR: aplay not found at ${APLAY}"
   exit 1
 fi
+if [ ! -x "${MKTEMP}" ]; then
+  log "ERROR: mktemp not found at ${MKTEMP} (PATH may be restricted under systemd)"
+  exit 1
+fi
+if [ ! -x "${AWK}" ]; then
+  log "ERROR: awk not found at ${AWK}"
+  exit 1
+fi
 
-tmp="$(mktemp /tmp/rocktimer-tts.XXXXXX.raw)"
-trap 'rm -f "$tmp"' EXIT
+tmp="$("${MKTEMP}" /tmp/rocktimer-tts.XXXXXX.raw)"
+trap '"${RM}" -f "$tmp"' EXIT
 
 if ! echo "${TEXT}" | "${PIPER}" --model "${MODEL}" --output-raw > "${tmp}" 2>> "${LOG}"; then
   log "ERROR: piper failed"
@@ -126,7 +138,7 @@ if [ -n "${ALSA_DEVICE:-}" ]; then
 fi
 
 # Prefer analog jack if present (bcm2835 Headphones)
-hp_card="$("${APLAY}" -l 2>/dev/null | awk -F'[: ]+' '/card [0-9]+:.*Headphones/ {print $2; exit}')"
+hp_card="$("${APLAY}" -l 2>/dev/null | "${AWK}" -F'[: ]+' '/card [0-9]+:.*Headphones/ {print $2; exit}')"
 if [ -n "${hp_card}" ]; then
   devices+=("hw:${hp_card},0" "plughw:${hp_card},0")
 fi

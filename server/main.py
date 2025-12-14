@@ -159,6 +159,14 @@ class RockTimerServer:
         """
         env = dict(os.environ)
         env.setdefault('HOME', '/root')
+        # systemd units often set a very minimal PATH; make sure common tools exist for speak.sh
+        env['PATH'] = env.get('PATH', '')
+        if env['PATH'].strip() == '' or env['PATH'] == self.config.get('server', {}).get('venv_path_only'):
+            pass
+        if '/usr/bin' not in env['PATH']:
+            env['PATH'] = f"/usr/bin:{env['PATH']}"
+        if '/bin' not in env['PATH']:
+            env['PATH'] = f"/bin:{env['PATH']}"
         alsa_device = self.config.get('server', {}).get('alsa_device')
         if alsa_device:
             env['ALSA_DEVICE'] = str(alsa_device)
