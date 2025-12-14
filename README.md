@@ -297,12 +297,20 @@ sudo raspi-config
 # Or directly:
 amixer cset numid=3 1
 
+# IMPORTANT: the server runs as root (for GPIO), so test audio as root too:
+sudo aplay -D hw:0,0 /usr/share/sounds/alsa/Front_Center.wav
+
 # Test Piper (Coqui TTS via piper binary):
 # NOTE: ALSA card numbers can change across reboots, so avoid hardcoding plughw:X,Y unless you know the correct device.
 echo "ready to go" | /opt/piper/piper --model /opt/piper/voices/en_US-lessac-medium.onnx --output-raw | /usr/bin/aplay -r 22050 -f S16_LE -c 1 -D default
 
 # Or test via the helper script used by the server:
 /opt/piper/speak.sh "ready to go"
+
+# If you get sound as your user but NOT from the server, try forcing an ALSA device that supports mixing:
+# (These names depend on your `aplay -L` output)
+ALSA_DEVICE="default:CARD=Headphones" /opt/piper/speak.sh "ready to go"
+ALSA_DEVICE="dmix:CARD=Headphones,DEV=0" /opt/piper/speak.sh "ready to go"
 ```
 
 ## Test

@@ -132,7 +132,17 @@ if [ -n "${hp_card}" ]; then
 fi
 
 # Common fallbacks (card numbering can change across reboots)
-devices+=("default" "hw:0,0" "plughw:0,0" "hw:1,0" "plughw:1,0" "hw:2,0" "plughw:2,0")
+devices+=(
+  # Prefer named devices that often route via dmix (non-exclusive)
+  "default:CARD=Headphones"
+  "sysdefault:CARD=Headphones"
+  "dmix:CARD=Headphones,DEV=0"
+  "default"
+  # Numeric fallbacks (can be exclusive)
+  "hw:0,0" "plughw:0,0"
+  "hw:1,0" "plughw:1,0"
+  "hw:2,0" "plughw:2,0"
+)
 
 for dev in "${devices[@]}"; do
   log "Trying device: ${dev}"
