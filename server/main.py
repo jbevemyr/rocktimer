@@ -14,6 +14,7 @@ import yaml
 import logging
 import threading
 import subprocess
+import traceback
 from datetime import datetime
 from pathlib import Path
 from typing import Optional
@@ -166,6 +167,32 @@ class RockTimerServer:
         if alsa_card is not None:
             env['ALSA_CARD'] = str(alsa_card)
         return env
+
+    def _tts_debug_log_path(self) -> str:
+        return self.config.get('server', {}).get('tts_debug_log', '/var/log/rocktimer-tts-spawn.log')
+
+    def _spawn_tts(self, text: str) -> None:
+        """Spawn the TTS helper script and log spawn details for troubleshooting."""
+        speak_script = '/opt/piper/speak.sh'
+        if not os.path.exists(speak_script):
+            raise FileNotFoundError(speak_script)
+
+        env = self._tts_env()
+        debug_log = self._tts_debug_log_path()
+        # Ensure we always capture something when troubleshooting.
+        with open(debug_log, 'a') as f:
+            f.write(f"{datetime.now().isoformat()} spawn speak.sh text={text!r} "
+                    f"ALSA_DEVICE={env.get('ALSA_DEVICE')!r} ALSA_CARD={env.get('ALSA_CARD')!r}\n")
+            f.flush()
+
+            # Send speak.sh stdout/stderr to the same file to catch ALSA/aplay errors.
+            subprocess.Popen(
+                [speak_script, text],
+                stdout=f,
+                stderr=f,
+                env=env,
+                start_new_session=True
+            )
     
     def _load_config(self, config_path: Path) -> dict:
         if not config_path.exists():
@@ -336,13 +363,7 @@ class RockTimerServer:
         try:
             speak_script = '/opt/piper/speak.sh'
             if os.path.exists(speak_script):
-                subprocess.Popen(
-                    [speak_script, text],
-                    stdout=subprocess.DEVNULL,
-                    stderr=subprocess.DEVNULL,
-                    env=self._tts_env(),
-                    start_new_session=True
-                )
+                self._spawn_tts(text)
             else:
                 subprocess.Popen(
                     ['/usr/bin/espeak-ng', '-v', 'en', '-s', '150', text],
@@ -351,7 +372,7 @@ class RockTimerServer:
                     env=self._tts_env()
                 )
         except Exception as e:
-            logger.error(f"TTS error: {e}")
+            logger.error(f"TTS error: {e}\n{traceback.format_exc()}")
     
     def _speak_time(self, time_ms: float, time_type: str = 'tee_hog'):
         """Speak a time value via text-to-speech."""
@@ -387,13 +408,7 @@ class RockTimerServer:
             if os.path.exists(speak_script):
                 # Non-blocking so UI updates aren't delayed while TTS plays
                 logger.info(f"Spawning: {speak_script} '{text}'")
-                subprocess.Popen(
-                    [speak_script, text],
-                    stdout=subprocess.DEVNULL,
-                    stderr=subprocess.DEVNULL,
-                    env=self._tts_env(),
-                    start_new_session=True
-                )
+                self._spawn_tts(text)
             else:
                 logger.warning("speak.sh not found, using espeak-ng")
                 subprocess.Popen(
