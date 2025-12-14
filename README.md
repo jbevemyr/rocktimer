@@ -91,6 +91,8 @@ You can also override the text:
 sudo ./setup/setup_splash.sh "RockTimer" "jb@bevemyr.com"
 ```
 
+This uses Plymouth and generates a simple image-based splash (curling stone + text). If you use a different display resolution than the Pi 7" touchscreen, re-run the script after switching displays so it can regenerate the image at the detected resolution.
+
 ### Apple Watch (future)
 
 The idea is to extend the Apple Watch app **“Curling Timer”** so it can display RockTimer times (and optionally arm/rearm).
