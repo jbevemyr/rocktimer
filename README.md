@@ -72,6 +72,25 @@ use the optional Nginx reverse proxy setup:
 sudo ./setup/setup_nginx_proxy.sh
 ```
 
+## Boot splash screen (optional)
+
+If you want a simple boot splash during OS startup that shows:
+
+- **RockTimer**
+- **jb@bevemyr.com**
+
+…you can enable a custom Plymouth theme:
+
+```bash
+sudo ./setup/setup_splash.sh
+```
+
+You can also override the text:
+
+```bash
+sudo ./setup/setup_splash.sh "RockTimer" "jb@bevemyr.com"
+```
+
 ### Apple Watch (future)
 
 The idea is to extend the Apple Watch app **“Curling Timer”** so it can display RockTimer times (and optionally arm/rearm).
@@ -185,8 +204,7 @@ If you want to build your own RockTimer setup, this is the hardware used in this
 - **1× IR proximity sensor module** (used on the Pi 4 as an “arm” trigger)
 
 ### Lasers (one per trigger point)
-- **3× Red dot laser heads** (3–5V, 650nm, ~5mW, 6mm diameter)  
-  Example: “3v~5V 650nm 5mW Red Dot Laser Head … Outer Diameter 6mm with Leads”
+- **3× Red dot laser heads** (3–5V, 650nm, 5mW, 6mm diameter)  
 - **3× Battery holders with switch** (one per laser), e.g.:
   - “3 AA Battery Holder with Cover and Switch” (4.5V)
 
