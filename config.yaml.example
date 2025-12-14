@@ -15,3 +15,4 @@ server:
   http_port: 8080     # Web UI (Pi 4 only)
   udp_port: 5000      # Same as port (Pi 4 only)
   enable_speech: true # Enable speech announcements
+  alsa_device: "hw:0,0" # Optional: audio output device (Pi 4 analog jack is usually hw:0,0)

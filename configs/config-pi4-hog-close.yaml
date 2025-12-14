@@ -11,3 +11,4 @@ server:
   host: "0.0.0.0"
   http_port: 8080
   udp_port: 5000
+  alsa_device: "hw:0,0"

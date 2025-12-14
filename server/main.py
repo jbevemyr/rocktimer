@@ -149,6 +149,20 @@ class RockTimerServer:
         self._running = False
         
         logger.info(f"RockTimer Server - UDP port {self.config['server']['udp_port']}")
+
+    def _tts_env(self) -> dict:
+        """Environment variables for TTS subprocesses.
+
+        If you use the Pi 4 analog jack (bcm2835 Headphones), you typically want:
+        ALSA_DEVICE=hw:0,0
+        """
+        env = dict(os.environ)
+        env.setdefault('HOME', '/root')
+        env.setdefault('ALSA_CARD', '2')
+        alsa_device = self.config.get('server', {}).get('alsa_device')
+        if alsa_device:
+            env['ALSA_DEVICE'] = str(alsa_device)
+        return env
     
     def _load_config(self, config_path: Path) -> dict:
         if not config_path.exists():
@@ -323,6 +337,7 @@ class RockTimerServer:
                     [speak_script, text],
                     stdout=subprocess.DEVNULL,
                     stderr=subprocess.DEVNULL,
+                    env=self._tts_env(),
                     start_new_session=True
                 )
             else:
@@ -368,15 +383,12 @@ class RockTimerServer:
             
             if os.path.exists(speak_script):
                 # Non-blocking so UI updates aren't delayed while TTS plays
-                env = dict(os.environ)
-                env.setdefault('HOME', '/root')
-                env.setdefault('ALSA_CARD', '2')
                 logger.info(f"Spawning: {speak_script} '{text}'")
                 subprocess.Popen(
                     [speak_script, text],
                     stdout=subprocess.DEVNULL,
                     stderr=subprocess.DEVNULL,
-                    env=env,
+                    env=self._tts_env(),
                     start_new_session=True
                 )
             else:
