@@ -404,9 +404,15 @@ class RockTimerServer:
             # Format exactly like the UI and speak it
             formatted = f"{seconds:.2f}"  # "3.18"
             whole, dec = formatted.split('.')
-            # Speak each decimal digit to avoid "ninety seven" (e.g. "2.97" -> "2 point 9 7")
-            dec_digits = " ".join(dec)
-            text = f"{whole} point {dec_digits}"  # "3 point 1 8"
+            # Speech formatting for hundredths:
+            # - Keep digit-by-digit for most cases: 2.97 -> "2 point 9 7"
+            # - But if the hundredths ends with 0, use the number: 13.10 -> "13 point 10" (Piper says "ten")
+            # - If it starts with 0, keep the leading zero: 3.03 -> "3 point 0 3"
+            if len(dec) == 2 and dec.endswith('0') and not dec.startswith('0'):
+                dec_spoken = str(int(dec))  # "10", "20", ...
+            else:
+                dec_spoken = " ".join(dec)
+            text = f"{whole} point {dec_spoken}"
             
             logger.info(f"Speaking: '{text}'")
             
