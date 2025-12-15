@@ -24,7 +24,7 @@ from dataclasses import dataclass
 
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Request
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import HTMLResponse, FileResponse
+from fastapi.responses import HTMLResponse, FileResponse, Response
 import uvicorn
 
 # Try importing gpiozero
@@ -603,6 +603,17 @@ async def websocket_endpoint(websocket: WebSocket):
 static_path = Path(__file__).parent / "static"
 if static_path.exists():
     app.mount("/static", StaticFiles(directory=static_path), name="static")
+
+
+@app.get("/favicon.ico")
+async def favicon():
+    # Serve a tiny SVG favicon (text-based) so kiosk loading probes can reliably detect "server up".
+    svg = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <rect width="64" height="64" rx="12" fill="#000"/>
+  <circle cx="32" cy="32" r="18" fill="#fff"/>
+  <circle cx="32" cy="32" r="10" fill="#111"/>
+</svg>"""
+    return Response(content=svg, media_type="image/svg+xml")
 
 
 @app.get("/", response_class=HTMLResponse)
