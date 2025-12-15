@@ -192,6 +192,45 @@ EOF
 
 # Kiosk mode for touchscreen
 USER_UID="$(id -u "${USER}")"
+
+# Local loading page (covers the screen immediately, then redirects when the UI is ready)
+cat > ${INSTALL_DIR}/kiosk_loading.html << 'EOF'
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>RockTimer</title>
+  <style>
+    html, body { height: 100%; margin: 0; background: #000; color: #fff; font-family: sans-serif; }
+    .wrap { height: 100%; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 12px; }
+    .title { font-size: 40px; font-weight: 700; letter-spacing: 0.5px; }
+    .sub { font-size: 18px; opacity: 0.75; }
+    .dot { display:inline-block; width:10px; height:10px; border-radius:50%; background:#fff; opacity:.2; animation: pulse 1s infinite; }
+    @keyframes pulse { 0%{opacity:.2} 50%{opacity:1} 100%{opacity:.2} }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="title">RockTimer</div>
+    <div class="sub">Startar… <span class="dot"></span></div>
+  </div>
+  <script>
+    const TARGET = "http://localhost:8080";
+    function tryRedirect() {
+      // Use an Image probe to avoid CORS restrictions from file:// -> http://
+      const img = new Image();
+      img.onload = () => window.location.replace(TARGET);
+      img.onerror = () => setTimeout(tryRedirect, 250);
+      img.src = TARGET + "/favicon.ico?ts=" + Date.now();
+    }
+    tryRedirect();
+  </script>
+</body>
+</html>
+EOF
+chown ${USER}:${USER} ${INSTALL_DIR}/kiosk_loading.html
+
 cat > /etc/systemd/system/rocktimer-kiosk.service << EOF
 [Unit]
 Description=RockTimer Kiosk Display
@@ -207,11 +246,11 @@ Environment=XDG_RUNTIME_DIR=/run/user/${USER_UID}
 Environment=DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/${USER_UID}/bus
 Environment=NO_AT_BRIDGE=1
 
-# Wait for the web UI to respond (avoids showing Chromium error page during boot)
-ExecStartPre=/usr/bin/timeout 60s /bin/sh -c 'until wget -qO- http://localhost:8080 >/dev/null 2>&1; do sleep 0.25; done'
+# Wait for X to exist (Wayland session typically starts Xwayland as :0)
+ExecStartPre=/bin/sh -c "i=0; while [ \$i -lt 200 ]; do test -S /tmp/.X11-unix/X0 && exit 0; i=\$((i+1)); sleep 0.05; done; exit 1"
 
 # Avoid keyring prompts / password store on kiosk
-ExecStart=/usr/bin/chromium --kiosk --noerrdialogs --disable-infobars --no-first-run --start-fullscreen --disable-background-networking --disable-sync --disable-features=TranslateUI --password-store=basic --use-mock-keychain http://localhost:8080
+ExecStart=/usr/bin/chromium --kiosk --noerrdialogs --disable-infobars --no-first-run --start-fullscreen --disable-background-networking --disable-sync --disable-features=TranslateUI --password-store=basic --use-mock-keychain file://${INSTALL_DIR}/kiosk_loading.html
 Restart=always
 RestartSec=2
 
@@ -241,6 +280,16 @@ cat > /home/${USER}/.config/labwc/autostart << 'EOF'
 /bin/true
 EOF
 chown -R ${USER}:${USER} /home/${USER}/.config/labwc/
+
+# Also disable the system default labwc autostart (wf-panel/pcmanfm) to avoid any desktop flash.
+if [ -f /etc/xdg/labwc/autostart ]; then
+  cp -n /etc/xdg/labwc/autostart /etc/xdg/labwc/autostart.rocktimer.bak || true
+  cat > /etc/xdg/labwc/autostart << 'EOF'
+# RockTimer kiosk: minimal labwc autostart
+# (disables panel + desktop icons to avoid showing a desktop before the kiosk)
+/usr/bin/kanshi &
+EOF
+fi
 
 echo ""
 echo "==================================="
