@@ -206,10 +206,14 @@ Environment=XAUTHORITY=/home/${USER}/.Xauthority
 Environment=XDG_RUNTIME_DIR=/run/user/${USER_UID}
 Environment=DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/${USER_UID}/bus
 Environment=NO_AT_BRIDGE=1
-ExecStartPre=/bin/sleep 5
-ExecStart=/usr/bin/chromium --kiosk --noerrdialogs --disable-infobars --no-first-run --start-fullscreen --disable-background-networking --disable-sync --disable-features=TranslateUI http://localhost:8080
+
+# Wait for the web UI to respond (avoids showing Chromium error page during boot)
+ExecStartPre=/usr/bin/timeout 60s /bin/sh -c 'until wget -qO- http://localhost:8080 >/dev/null 2>&1; do sleep 0.25; done'
+
+# Avoid keyring prompts / password store on kiosk
+ExecStart=/usr/bin/chromium --kiosk --noerrdialogs --disable-infobars --no-first-run --start-fullscreen --disable-background-networking --disable-sync --disable-features=TranslateUI --password-store=basic --use-mock-keychain http://localhost:8080
 Restart=always
-RestartSec=5
+RestartSec=2
 
 [Install]
 WantedBy=graphical.target
@@ -221,14 +225,22 @@ systemctl enable rocktimer-server.service
 # Disable screen blanking
 mkdir -p /home/${USER}/.config/lxsession/LXDE-pi/
 cat > /home/${USER}/.config/lxsession/LXDE-pi/autostart << EOF
-@lxpanel --profile LXDE-pi
-@pcmanfm --desktop --profile LXDE-pi
 @xset s off
 @xset -dpms
 @xset s noblank
 @unclutter -idle 0.5 -root
 EOF
 chown -R ${USER}:${USER} /home/${USER}/.config/
+
+# If running the default Raspberry Pi OS Wayland session (labwc),
+# override its autostart so we don't briefly show panel/desktop before Chromium.
+mkdir -p /home/${USER}/.config/labwc/
+cat > /home/${USER}/.config/labwc/autostart << 'EOF'
+# RockTimer kiosk: override Raspberry Pi OS default labwc autostart
+# (prevents panel + desktop icons + keyring prompts during boot)
+/bin/true
+EOF
+chown -R ${USER}:${USER} /home/${USER}/.config/labwc/
 
 echo ""
 echo "==================================="
