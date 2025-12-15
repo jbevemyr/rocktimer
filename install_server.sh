@@ -191,6 +191,7 @@ WantedBy=multi-user.target
 EOF
 
 # Kiosk mode for touchscreen
+USER_UID="$(id -u "${USER}")"
 cat > /etc/systemd/system/rocktimer-kiosk.service << EOF
 [Unit]
 Description=RockTimer Kiosk Display
@@ -202,8 +203,11 @@ Type=simple
 User=${USER}
 Environment=DISPLAY=:0
 Environment=XAUTHORITY=/home/${USER}/.Xauthority
+Environment=XDG_RUNTIME_DIR=/run/user/${USER_UID}
+Environment=DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/${USER_UID}/bus
+Environment=NO_AT_BRIDGE=1
 ExecStartPre=/bin/sleep 5
-ExecStart=/usr/bin/chromium --kiosk --noerrdialogs --disable-infobars --no-first-run --start-fullscreen http://localhost:8080
+ExecStart=/usr/bin/chromium --kiosk --noerrdialogs --disable-infobars --no-first-run --start-fullscreen --disable-background-networking --disable-sync --disable-features=TranslateUI http://localhost:8080
 Restart=always
 RestartSec=5
 
