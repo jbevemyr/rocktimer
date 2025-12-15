@@ -218,11 +218,11 @@ cat > ${INSTALL_DIR}/kiosk_loading.html << 'EOF'
   <script>
     const TARGET = "http://localhost:8080";
     function tryRedirect() {
-      // Use an Image probe to avoid CORS restrictions from file:// -> http://
-      const img = new Image();
-      img.onload = () => window.location.replace(TARGET);
-      img.onerror = () => setTimeout(tryRedirect, 250);
-      img.src = TARGET + "/favicon.ico?ts=" + Date.now();
+      // Detect when the server is reachable.
+      // Use fetch(no-cors) from file:// so we do not get stuck on missing assets.
+      fetch(TARGET + "/api/status?ts=" + Date.now(), { mode: "no-cors", cache: "no-store" })
+        .then(() => window.location.replace(TARGET))
+        .catch(() => setTimeout(tryRedirect, 250));
     }
     tryRedirect();
   </script>
