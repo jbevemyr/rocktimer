@@ -13,3 +13,7 @@ server:
   udp_port: 5000
   alsa_device: "hw:0,0"
   auto_arm_on_start: true
+  speech:
+    speak_ready: true
+    speak_tee_hog: true
+    speak_hog_hog: true

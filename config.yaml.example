@@ -17,3 +17,8 @@ server:
   enable_speech: true # Enable speech announcements
   alsa_device: "hw:0,0" # Optional: audio output device (Pi 4 analog jack is usually hw:0,0)
   auto_arm_on_start: true # Optional: start in ARMED state on boot (Pi 4 server)
+  # Default speech options on startup (can also be changed at runtime via the Settings UI)
+  speech:
+    speak_ready: true
+    speak_tee_hog: true
+    speak_hog_hog: false

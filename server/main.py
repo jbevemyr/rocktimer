@@ -129,12 +129,13 @@ class RockTimerServer:
         self.websocket_clients: list[WebSocket] = []
         self._loop = None  # Set when the server starts
         
-        # Speech settings (runtime, ej sparade till disk)
+        # Speech settings (runtime). Defaults come from config, but can be changed via /api/settings.
+        speech_cfg = self.config.get('server', {}).get('speech', {}) or {}
         self.speech_settings = {
             'speech_enabled': self.config['server'].get('enable_speech', False),
-            'speak_tee_hog': True,
-            'speak_hog_hog': False,
-            'speak_ready': True
+            'speak_tee_hog': bool(speech_cfg.get('speak_tee_hog', True)),
+            'speak_hog_hog': bool(speech_cfg.get('speak_hog_hog', False)),
+            'speak_ready': bool(speech_cfg.get('speak_ready', True)),
         }
         
         # In-memory history
