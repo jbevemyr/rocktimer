@@ -143,6 +143,20 @@ sudo ROCKTIMER_CONFIGURE_CHRONY=1 ROCKTIMER_CHRONY_CIDR=192.168.50.0/24 ./instal
 sudo ROCKTIMER_CONFIGURE_CHRONY=1 ROCKTIMER_CHRONY_SERVER=192.168.50.1 ./install_sensor.sh
 ```
 
+#### Snabbare “rätt tid” efter lång avstängning (makestep)
+
+Som standard lägger install-skripten in:
+
+- `makestep 1.0 3`
+
+Det betyder: om klockan skiljer mer än **1 sekund** får chrony **hoppa (step)** till rätt tid under de första **3** uppdateringarna efter start. Det gör att Pi Zero-klienterna kan bli “rätt” snabbt även om de varit avstängda länge.
+
+Du kan ändra detta:
+
+```bash
+sudo ROCKTIMER_CONFIGURE_CHRONY=1 ROCKTIMER_CHRONY_MAKESTEP_THRESHOLD=0.5 ROCKTIMER_CHRONY_MAKESTEP_LIMIT=5 ./install_sensor.sh
+```
+
 If you don't set `ROCKTIMER_CONFIGURE_CHRONY`, the installer will prompt you.
 
 ### 1) Install chrony

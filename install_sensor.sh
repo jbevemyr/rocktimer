@@ -84,6 +84,11 @@ if [[ "${configure_chrony}" =~ ^[Yy]$ ]]; then
     if [ ! -f "${CHRONY_CONF}" ]; then
         echo "WARNING: ${CHRONY_CONF} not found; skipping chrony config"
     else
+        CHRONY_MAKESTEP_THRESHOLD_DEFAULT="1.0"
+        CHRONY_MAKESTEP_LIMIT_DEFAULT="3"
+        CHRONY_MAKESTEP_THRESHOLD="${ROCKTIMER_CHRONY_MAKESTEP_THRESHOLD:-${CHRONY_MAKESTEP_THRESHOLD_DEFAULT}}"
+        CHRONY_MAKESTEP_LIMIT="${ROCKTIMER_CHRONY_MAKESTEP_LIMIT:-${CHRONY_MAKESTEP_LIMIT_DEFAULT}}"
+
         # Allow interactive override unless env var is set
         if [ -z "${ROCKTIMER_CHRONY_SERVER:-}" ]; then
             read -r -p "Chrony server IP/hostname [${CHRONY_SERVER}]: " in_server
@@ -105,6 +110,8 @@ if [[ "${configure_chrony}" =~ ^[Yy]$ ]]; then
 ${CHRONY_MARKER_BEGIN}
 # Prefer RockTimer Pi 4 as time source
 server ${CHRONY_SERVER} iburst prefer
+# Allow stepping the clock at boot if offset is large (helps if devices were powered off for a long time)
+makestep ${CHRONY_MAKESTEP_THRESHOLD} ${CHRONY_MAKESTEP_LIMIT}
 ${CHRONY_MARKER_END}
 EOF
 

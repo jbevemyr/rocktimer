@@ -191,6 +191,11 @@ if [[ "${configure_chrony}" =~ ^[Yy]$ ]]; then
     if [ ! -f "${CHRONY_CONF}" ]; then
         echo "WARNING: ${CHRONY_CONF} not found; skipping chrony config"
     else
+        CHRONY_MAKESTEP_THRESHOLD_DEFAULT="1.0"
+        CHRONY_MAKESTEP_LIMIT_DEFAULT="3"
+        CHRONY_MAKESTEP_THRESHOLD="${ROCKTIMER_CHRONY_MAKESTEP_THRESHOLD:-${CHRONY_MAKESTEP_THRESHOLD_DEFAULT}}"
+        CHRONY_MAKESTEP_LIMIT="${ROCKTIMER_CHRONY_MAKESTEP_LIMIT:-${CHRONY_MAKESTEP_LIMIT_DEFAULT}}"
+
         tmp="$(mktemp)"
         # Remove any previous RockTimer chrony block
         awk -v b="${CHRONY_MARKER_BEGIN}" -v e="${CHRONY_MARKER_END}" '
@@ -208,6 +213,8 @@ ${CHRONY_MARKER_BEGIN}
 allow ${CHRONY_CIDR}
 # Optional: act as a local time source even if internet is unavailable
 local stratum 10
+# Allow stepping the clock at boot if offset is large (helps if devices were powered off for a long time)
+makestep ${CHRONY_MAKESTEP_THRESHOLD} ${CHRONY_MAKESTEP_LIMIT}
 ${CHRONY_MARKER_END}
 EOF
 
