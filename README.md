@@ -23,17 +23,17 @@ The goal is to provide a fast, touch-friendly display (and optional voice callou
 
 Sensors send triggers to the server. The server ignores them unless the system is armed.
 
-## Snabb installation (ny Raspberry Pi OS)
+## Quickstart (fresh Raspberry Pi OS)
 
-Nedan är “från noll”-stegen för en helt nyinstallerad Raspberry Pi OS.
+Below are the “from zero” steps for a brand new Raspberry Pi OS installation.
 
-### Pi 4 (Server + skärm/kiosk)
+### Pi 4 (Server + kiosk display)
 
-**Förutsättningar**
-- Raspberry Pi OS installerat (Bookworm/Bullseye funkar), SSH påslaget
-- (Rekommenderat) Pi 4 ska vara **Wi‑Fi AP** för RockTimer-nätet
+**Prerequisites**
+- Raspberry Pi OS installed (Bookworm/Bullseye), SSH enabled
+- (Recommended) Pi 4 acts as the RockTimer **Wi‑Fi AP**
 
-**1) Klona och installera**
+**1) Clone and install**
 
 ```bash
 sudo apt-get update
@@ -41,44 +41,44 @@ sudo apt-get install -y git
 git clone https://github.com/jbevemyr/rocktimer.git
 cd rocktimer
 
-# Installerar server + kiosk (Chromium i fullskärm) + dependencies
+# Installs server + kiosk (Chromium fullscreen) + dependencies
 sudo ./install_server.sh
 ```
 
-**2) (Rekommenderat) Sätt upp RockTimer Wi‑Fi (AP)**
+**2) (Recommended) Set up RockTimer Wi‑Fi (AP)**
 
 ```bash
 sudo ./setup/setup_network.sh
 sudo reboot
 ```
 
-Efter reboot:
-- Serverns IP blir normalt **`192.168.50.1`**
-- Web UI: **`http://192.168.50.1:8080`** (eller `http://rocktimer` om du även satt upp DNS/port 80)
+After reboot:
+- The server IP is typically **`192.168.50.1`**
+- Web UI: **`http://192.168.50.1:8080`** (or `http://rocktimer` if you also set up DNS/port 80)
 
-**3) Starta/titta status**
+**3) Start / check status**
 
 ```bash
 sudo systemctl enable --now rocktimer-server.service rocktimer-kiosk.service
 systemctl status rocktimer-server.service rocktimer-kiosk.service --no-pager
 ```
 
-**4) (Valfritt) Chrony direkt i installern**
+**4) (Optional) Chrony from the installer**
 
-Om du vill slippa prompts:
+To skip prompts:
 
 ```bash
 sudo ROCKTIMER_CONFIGURE_CHRONY=1 ./install_server.sh
 ```
 
-### Pi Zero 2 W (Sensor: tee eller hog_far)
+### Pi Zero 2 W (Sensor: tee or hog_far)
 
-**Förutsättningar**
+**Prerequisites**
 - Raspberry Pi OS installerat
-- Wi‑Fi förkonfigurerat att ansluta till RockTimer-SSID (default `rocktimer`)
-- SSH påslaget (så du kan köra installen remote)
+- Wi‑Fi preconfigured to join the RockTimer SSID (default `rocktimer`)
+- SSH enabled (so you can run the installer remotely)
 
-**1) Klona och installera**
+**1) Clone and install**
 
 ```bash
 sudo apt-get update
@@ -86,24 +86,24 @@ sudo apt-get install -y git
 git clone https://github.com/jbevemyr/rocktimer.git
 cd rocktimer
 
-# Välj tee eller hog_far när scriptet frågar
+# Choose tee or hog_far when prompted
 sudo ./install_sensor.sh
 ```
 
-**2) Peka sensorn mot Pi 4**
+**2) Point the sensor at the Pi 4**
 
-Kontrollera i `/opt/rocktimer/config.yaml` att servern pekar på Pi 4:
+Verify in `/opt/rocktimer/config.yaml` that the server points to the Pi 4:
 
 - `host: "192.168.50.1"`
 
-**3) Starta/titta status**
+**3) Start / check status**
 
 ```bash
 sudo systemctl enable --now rocktimer-sensor.service
 systemctl status rocktimer-sensor.service --no-pager
 ```
 
-**4) (Valfritt) Chrony direkt i installern**
+**4) (Optional) Chrony from the installer**
 
 ```bash
 sudo ROCKTIMER_CONFIGURE_CHRONY=1 ROCKTIMER_CHRONY_SERVER=192.168.50.1 ./install_sensor.sh
@@ -229,15 +229,15 @@ sudo ROCKTIMER_CONFIGURE_CHRONY=1 ROCKTIMER_CHRONY_CIDR=192.168.50.0/24 ./instal
 sudo ROCKTIMER_CONFIGURE_CHRONY=1 ROCKTIMER_CHRONY_SERVER=192.168.50.1 ./install_sensor.sh
 ```
 
-#### Snabbare “rätt tid” efter lång avstängning (makestep)
+#### Faster “correct time” after long power-off (makestep)
 
-Som standard lägger install-skripten in:
+By default, the install scripts add:
 
 - `makestep 1.0 3`
 
-Det betyder: om klockan skiljer mer än **1 sekund** får chrony **hoppa (step)** till rätt tid under de första **3** uppdateringarna efter start. Det gör att Pi Zero-klienterna kan bli “rätt” snabbt även om de varit avstängda länge.
+Meaning: if the clock differs by more than **1 second**, chrony is allowed to **step** to the correct time during the first **3** updates after boot. This helps Pi Zero clients get “correct” quickly even if they have been powered off for a long time.
 
-Du kan ändra detta:
+You can change this:
 
 ```bash
 sudo ROCKTIMER_CONFIGURE_CHRONY=1 ROCKTIMER_CHRONY_MAKESTEP_THRESHOLD=0.5 ROCKTIMER_CHRONY_MAKESTEP_LIMIT=5 ./install_sensor.sh
