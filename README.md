@@ -23,6 +23,92 @@ The goal is to provide a fast, touch-friendly display (and optional voice callou
 
 Sensors send triggers to the server. The server ignores them unless the system is armed.
 
+## Snabb installation (ny Raspberry Pi OS)
+
+Nedan är “från noll”-stegen för en helt nyinstallerad Raspberry Pi OS.
+
+### Pi 4 (Server + skärm/kiosk)
+
+**Förutsättningar**
+- Raspberry Pi OS installerat (Bookworm/Bullseye funkar), SSH påslaget
+- (Rekommenderat) Pi 4 ska vara **Wi‑Fi AP** för RockTimer-nätet
+
+**1) Klona och installera**
+
+```bash
+sudo apt-get update
+sudo apt-get install -y git
+git clone https://github.com/jbevemyr/rocktimer.git
+cd rocktimer
+
+# Installerar server + kiosk (Chromium i fullskärm) + dependencies
+sudo ./install_server.sh
+```
+
+**2) (Rekommenderat) Sätt upp RockTimer Wi‑Fi (AP)**
+
+```bash
+sudo ./setup/setup_network.sh
+sudo reboot
+```
+
+Efter reboot:
+- Serverns IP blir normalt **`192.168.50.1`**
+- Web UI: **`http://192.168.50.1:8080`** (eller `http://rocktimer` om du även satt upp DNS/port 80)
+
+**3) Starta/titta status**
+
+```bash
+sudo systemctl enable --now rocktimer-server.service rocktimer-kiosk.service
+systemctl status rocktimer-server.service rocktimer-kiosk.service --no-pager
+```
+
+**4) (Valfritt) Chrony direkt i installern**
+
+Om du vill slippa prompts:
+
+```bash
+sudo ROCKTIMER_CONFIGURE_CHRONY=1 ./install_server.sh
+```
+
+### Pi Zero 2 W (Sensor: tee eller hog_far)
+
+**Förutsättningar**
+- Raspberry Pi OS installerat
+- Wi‑Fi förkonfigurerat att ansluta till RockTimer-SSID (default `rocktimer`)
+- SSH påslaget (så du kan köra installen remote)
+
+**1) Klona och installera**
+
+```bash
+sudo apt-get update
+sudo apt-get install -y git
+git clone https://github.com/jbevemyr/rocktimer.git
+cd rocktimer
+
+# Välj tee eller hog_far när scriptet frågar
+sudo ./install_sensor.sh
+```
+
+**2) Peka sensorn mot Pi 4**
+
+Kontrollera i `/opt/rocktimer/config.yaml` att servern pekar på Pi 4:
+
+- `host: "192.168.50.1"`
+
+**3) Starta/titta status**
+
+```bash
+sudo systemctl enable --now rocktimer-sensor.service
+systemctl status rocktimer-sensor.service --no-pager
+```
+
+**4) (Valfritt) Chrony direkt i installern**
+
+```bash
+sudo ROCKTIMER_CONFIGURE_CHRONY=1 ROCKTIMER_CHRONY_SERVER=192.168.50.1 ./install_sensor.sh
+```
+
 ## Network (Pi 4 as Wi‑Fi Access Point)
 
 RockTimer is designed to run on a **local Wi‑Fi network** created by the Pi 4:
