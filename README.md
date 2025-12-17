@@ -121,6 +121,30 @@ The repository also contains a simple Apple Watch companion app under `apple-wat
 Accurate timing requires the clocks on all devices to be synchronized.
 Use **chrony** with the Pi 4 as the local time server.
 
+### Quick setup via install scripts (recommended)
+
+Both install scripts can optionally configure chrony for you (idempotent: re-running updates the RockTimer block).
+
+- **Pi 4 (server)**:
+
+```bash
+sudo ROCKTIMER_CONFIGURE_CHRONY=1 ./install_server.sh
+```
+
+Optional overrides:
+
+```bash
+sudo ROCKTIMER_CONFIGURE_CHRONY=1 ROCKTIMER_CHRONY_CIDR=192.168.50.0/24 ./install_server.sh
+```
+
+- **Pi Zero 2 W (sensor/client)**:
+
+```bash
+sudo ROCKTIMER_CONFIGURE_CHRONY=1 ROCKTIMER_CHRONY_SERVER=192.168.50.1 ./install_sensor.sh
+```
+
+If you don't set `ROCKTIMER_CONFIGURE_CHRONY`, the installer will prompt you.
+
 ### 1) Install chrony
 
 On all Pi’s:

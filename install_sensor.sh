@@ -40,7 +40,8 @@ apt-get install -y \
     python3-pip \
     python3-venv \
     python3-lgpio \
-    python3-gpiozero
+    python3-gpiozero \
+    chrony
 
 echo "[2/5] Creating install directory..."
 mkdir -p ${INSTALL_DIR}
@@ -61,6 +62,59 @@ fi
 
 # Set device_id
 sed -i "s/device_id: \"tee\"/device_id: \"${DEVICE_ID}\"/" ${INSTALL_DIR}/config.yaml
+
+echo "[4b/5] Optional: configuring time sync (chrony)..."
+CHRONY_CONF="/etc/chrony/chrony.conf"
+CHRONY_MARKER_BEGIN="# RockTimer chrony begin"
+CHRONY_MARKER_END="# RockTimer chrony end"
+CHRONY_SERVER_DEFAULT="192.168.50.1"
+CHRONY_SERVER="${ROCKTIMER_CHRONY_SERVER:-${CHRONY_SERVER_DEFAULT}}"
+CONFIGURE_CHRONY="${ROCKTIMER_CONFIGURE_CHRONY:-}"
+
+if [ "${CONFIGURE_CHRONY}" = "1" ]; then
+    configure_chrony="y"
+elif [ "${CONFIGURE_CHRONY}" = "0" ]; then
+    configure_chrony="n"
+else
+    read -r -p "Configure chrony time sync (recommended)? [Y/n] " configure_chrony
+    configure_chrony="${configure_chrony:-y}"
+fi
+
+if [[ "${configure_chrony}" =~ ^[Yy]$ ]]; then
+    if [ ! -f "${CHRONY_CONF}" ]; then
+        echo "WARNING: ${CHRONY_CONF} not found; skipping chrony config"
+    else
+        # Allow interactive override unless env var is set
+        if [ -z "${ROCKTIMER_CHRONY_SERVER:-}" ]; then
+            read -r -p "Chrony server IP/hostname [${CHRONY_SERVER}]: " in_server
+            CHRONY_SERVER="${in_server:-${CHRONY_SERVER}}"
+        fi
+
+        tmp="$(mktemp)"
+        # Remove any previous RockTimer chrony block
+        awk -v b="${CHRONY_MARKER_BEGIN}" -v e="${CHRONY_MARKER_END}" '
+          $0==b {skip=1; next}
+          $0==e {skip=0; next}
+          !skip {print}
+        ' "${CHRONY_CONF}" > "${tmp}"
+        cat "${tmp}" > "${CHRONY_CONF}"
+        rm -f "${tmp}"
+
+        cat >> "${CHRONY_CONF}" << EOF
+
+${CHRONY_MARKER_BEGIN}
+# Prefer RockTimer Pi 4 as time source
+server ${CHRONY_SERVER} iburst prefer
+${CHRONY_MARKER_END}
+EOF
+
+        systemctl enable chrony >/dev/null 2>&1 || true
+        systemctl restart chrony >/dev/null 2>&1 || systemctl start chrony >/dev/null 2>&1 || true
+        echo "Chrony configured (client). Server: ${CHRONY_SERVER}"
+    fi
+else
+    echo "Skipping chrony configuration."
+fi
 
 echo "[5/5] Installing systemd service..."
 
