@@ -79,6 +79,7 @@ set -euo pipefail
 
 # Simple, robust Piper TTS helper:
 # - Optional "fast path" for time announcements by concatenating pre-generated audio fragments
+# - Optional "fast path" for cached phrases (e.g. "ready to go")
 # - Generates raw audio once
 # - Prefers the Pi analog jack if present (bcm2835 Headphones)
 # - Tries a few ALSA output devices until one works
@@ -134,11 +135,47 @@ fi
 FAST="${ROCKTIMER_TTS_FAST:-}"
 CACHE_DIR="/opt/piper/cache"
 FRAG_DIR="${CACHE_DIR}/fragments"
+PHRASE_DIR="${CACHE_DIR}/phrases"
 SIL="${CACHE_DIR}/silence_60ms.raw"
 
 is_time_phrase=0
 if echo "${TEXT}" | grep -Eq '^[0-9]+ point( [0-9])+$'; then
   is_time_phrase=1
+fi
+
+# Phrase cache: normalize text -> filename and play if present
+phrase_key="$(echo "${TEXT}" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9]+/_/g; s/^_+//; s/_+$//')"
+phrase_file="${PHRASE_DIR}/${phrase_key}.raw"
+if { [ "${FAST}" = "1" ] || [ "${phrase_key}" = "ready_to_go" ]; } && [ -f "${phrase_file}" ]; then
+  log "FAST phrase: '${TEXT}' -> ${phrase_file}"
+  devices=()
+  if [ -n "${ALSA_DEVICE:-}" ]; then
+    devices+=("${ALSA_DEVICE}")
+  fi
+  hp_card="$("${APLAY}" -l 2>/dev/null | "${AWK}" -F'[: ]+' '/card [0-9]+:.*Headphones/ {print $2; exit}')"
+  if [ -n "${hp_card}" ]; then
+    devices+=("hw:${hp_card},0" "plughw:${hp_card},0")
+  fi
+  devices+=(
+    "default:CARD=Headphones"
+    "sysdefault:CARD=Headphones"
+    "dmix:CARD=Headphones,DEV=0"
+    "default"
+    "hw:0,0" "plughw:0,0"
+    "hw:1,0" "plughw:1,0"
+    "hw:2,0" "plughw:2,0"
+  )
+
+  for dev in "${devices[@]}"; do
+    log "Trying device: ${dev}"
+    if "${APLAY}" -q -D "${dev}" -r "${RATE}" -f "${FMT}" -c "${CH}" "${phrase_file}" 2>> "${LOG}"; then
+      log "OK device: ${dev}"
+      exit 0
+    fi
+  done
+
+  log "ERROR: no working ALSA device (fast phrase path)"
+  exit 1
 fi
 
 if { [ "${FAST}" = "1" ] || [ "${is_time_phrase}" = "1" ]; } && [ -d "${FRAG_DIR}" ] && [ -f "${SIL}" ]; then
@@ -245,7 +282,9 @@ chmod +x "${PIPER_DIR}/speak.sh"
 echo "[4bb/5] Preparing fast TTS fragments (optional)..."
 CACHE_DIR="/opt/piper/cache"
 FRAG_DIR="${CACHE_DIR}/fragments"
+PHRASE_DIR="${CACHE_DIR}/phrases"
 mkdir -p "${FRAG_DIR}"
+mkdir -p "${PHRASE_DIR}"
 
 # Defaults: keep callouts snappy on Raspberry Pi
 PIPER_LENGTH_SCALE="${ROCKTIMER_PIPER_LENGTH_SCALE:-0.75}"
@@ -274,6 +313,12 @@ with open("/opt/piper/cache/silence_60ms.raw","wb") as f:
 PY
 fi
 chmod -R a+rX "${CACHE_DIR}"
+
+# Cache common short phrases so they don't pay model load time
+ready_phrase="${PHRASE_DIR}/ready_to_go.raw"
+if [ ! -s "${ready_phrase}" ]; then
+    echo "ready to go" | "${PIPER_BIN}" --model "${PIPER_MODEL}" --output-raw --length_scale "${PIPER_LENGTH_SCALE}" --sentence_silence "${PIPER_SENTENCE_SILENCE}" > "${ready_phrase}"
+fi
 
 echo "[4c/5] Optional: configuring time sync (chrony)..."
 CHRONY_CONF="/etc/chrony/chrony.conf"

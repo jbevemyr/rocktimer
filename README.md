@@ -398,6 +398,8 @@ On Raspberry Pi, launching Piper for every callout can add noticeable latency (m
 The installer pre-generates small audio fragments for `0-9` and `point` and the TTS helper can stitch
 them together for phrases like `3 point 1 8`.
 
+It also caches a few short phrases (e.g. `ready to go`) so they play without model load time.
+
 To force the fast path, set:
 
 ```bash
