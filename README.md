@@ -392,6 +392,18 @@ and a 3W speaker for an enclosure build.
 
 RockTimer uses **Piper (Coqui TTS)** for speech. The server calls `/opt/piper/speak.sh`, which pipes Piper audio to `/usr/bin/aplay`.
 
+#### Faster callouts (optional)
+
+On Raspberry Pi, launching Piper for every callout can add noticeable latency (model load + synthesis).
+The installer pre-generates small audio fragments for `0-9` and `point` and the TTS helper can stitch
+them together for phrases like `3 point 1 8`.
+
+To force the fast path, set:
+
+```bash
+ROCKTIMER_TTS_FAST=1
+```
+
 **Parts:**
 - HW-104 or PAM8403 amplifier module
 - B103 potentiometer (10kΩ) for volume control

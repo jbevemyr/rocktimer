@@ -78,6 +78,7 @@ cat > "${PIPER_DIR}/speak.sh" << 'EOF'
 set -euo pipefail
 
 # Simple, robust Piper TTS helper:
+# - Optional "fast path" for time announcements by concatenating pre-generated audio fragments
 # - Generates raw audio once
 # - Prefers the Pi analog jack if present (bcm2835 Headphones)
 # - Tries a few ALSA output devices until one works
@@ -122,6 +123,73 @@ fi
 if [ ! -x "${AWK}" ]; then
   log "ERROR: awk not found at ${AWK}"
   exit 1
+fi
+
+# Optional fast path: use cached raw fragments for phrases like "3 point 1 8"
+# Enable explicitly with ROCKTIMER_TTS_FAST=1, or auto-enable for matching time phrases if cache exists.
+FAST="${ROCKTIMER_TTS_FAST:-}"
+CACHE_DIR="/opt/piper/cache"
+FRAG_DIR="${CACHE_DIR}/fragments"
+SIL="${CACHE_DIR}/silence_60ms.raw"
+
+is_time_phrase=0
+if echo "${TEXT}" | grep -Eq '^[0-9]+ point( [0-9])+$'; then
+  is_time_phrase=1
+fi
+
+if { [ "${FAST}" = "1" ] || [ "${is_time_phrase}" = "1" ]; } && [ -d "${FRAG_DIR}" ] && [ -f "${SIL}" ]; then
+  tmp="$("${MKTEMP}" /tmp/rocktimer-tts.XXXXXX.raw)"
+  trap '"${RM}" -f "$tmp"' EXIT
+
+  # Build concatenated raw audio
+  # shellcheck disable=SC2206
+  parts=(${TEXT})
+  ok=1
+  : > "${tmp}"
+  for p in "${parts[@]}"; do
+    frag="${FRAG_DIR}/${p}.raw"
+    if [ ! -f "${frag}" ]; then
+      ok=0
+      break
+    fi
+    cat "${frag}" >> "${tmp}"
+    # Add a small pause between tokens (sounds more natural for digits)
+    cat "${SIL}" >> "${tmp}"
+  done
+
+  if [ "${ok}" = "1" ]; then
+    log "FAST path: '${TEXT}'"
+    # Playback (same device selection logic as below)
+    devices=()
+    if [ -n "${ALSA_DEVICE:-}" ]; then
+      devices+=("${ALSA_DEVICE}")
+    fi
+    hp_card="$("${APLAY}" -l 2>/dev/null | "${AWK}" -F'[: ]+' '/card [0-9]+:.*Headphones/ {print $2; exit}')"
+    if [ -n "${hp_card}" ]; then
+      devices+=("hw:${hp_card},0" "plughw:${hp_card},0")
+    fi
+    devices+=(
+      "default:CARD=Headphones"
+      "sysdefault:CARD=Headphones"
+      "dmix:CARD=Headphones,DEV=0"
+      "default"
+      "hw:0,0" "plughw:0,0"
+      "hw:1,0" "plughw:1,0"
+      "hw:2,0" "plughw:2,0"
+    )
+
+    for dev in "${devices[@]}"; do
+      log "Trying device: ${dev}"
+      if "${APLAY}" -q -D "${dev}" -r "${RATE}" -f "${FMT}" -c "${CH}" "${tmp}" 2>> "${LOG}"; then
+        log "OK device: ${dev}"
+        exit 0
+      fi
+    done
+
+    log "ERROR: no working ALSA device (fast path)"
+    exit 1
+  fi
+  # Fall back to normal Piper synthesis below if fragments are missing.
 fi
 
 tmp="$("${MKTEMP}" /tmp/rocktimer-tts.XXXXXX.raw)"
@@ -169,6 +237,33 @@ log "ERROR: no working ALSA device (tried: ${devices[*]})"
 exit 1
 EOF
 chmod +x "${PIPER_DIR}/speak.sh"
+
+echo "[4bb/5] Preparing fast TTS fragments (optional)..."
+CACHE_DIR="/opt/piper/cache"
+FRAG_DIR="${CACHE_DIR}/fragments"
+mkdir -p "${FRAG_DIR}"
+
+# Generate raw fragments for digits + "point" (used by the UI's time callouts like "3 point 1 8").
+# This avoids re-loading the model on every callout.
+for token in 0 1 2 3 4 5 6 7 8 9 point; do
+    out="${FRAG_DIR}/${token}.raw"
+    if [ ! -s "${out}" ]; then
+        echo "${token}" | "${PIPER_BIN}" --model "${PIPER_MODEL}" --output-raw > "${out}"
+    fi
+done
+
+# Small silence buffer (~60ms) between tokens
+SIL="${CACHE_DIR}/silence_60ms.raw"
+if [ ! -s "${SIL}" ]; then
+    python3 - <<'PY'
+rate=22050
+ms=60
+samples=int(rate*(ms/1000.0))
+with open("/opt/piper/cache/silence_60ms.raw","wb") as f:
+    f.write(b"\x00\x00"*samples)
+PY
+fi
+chmod -R a+rX "${CACHE_DIR}"
 
 echo "[4c/5] Optional: configuring time sync (chrony)..."
 CHRONY_CONF="/etc/chrony/chrony.conf"
