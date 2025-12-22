@@ -139,7 +139,8 @@ PHRASE_DIR="${CACHE_DIR}/phrases"
 SIL="${CACHE_DIR}/silence_60ms.raw"
 
 is_time_phrase=0
-if echo "${TEXT}" | grep -Eq '^[0-9]+ point( [0-9])+$'; then
+# Accept "3 point 1 8" and also "12 point 1 1" (for hog-hog like 12.11)
+if echo "${TEXT}" | grep -Eq '^[0-9]+ point( [0-9]+)+$'; then
   is_time_phrase=1
 fi
 
@@ -293,7 +294,7 @@ TOKEN_PAUSE_MS="${ROCKTIMER_TTS_TOKEN_PAUSE_MS:-20}"
 
 # Generate raw fragments for digits + "point" (used by the UI's time callouts like "3 point 1 8").
 # This avoids re-loading the model on every callout.
-for token in 0 1 2 3 4 5 6 7 8 9 point; do
+for token in 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 point; do
     out="${FRAG_DIR}/${token}.raw"
     if [ ! -s "${out}" ]; then
         echo "${token}" | "${PIPER_BIN}" --model "${PIPER_MODEL}" --output-raw --length_scale "${PIPER_LENGTH_SCALE}" --sentence_silence "${PIPER_SENTENCE_SILENCE}" > "${out}"
