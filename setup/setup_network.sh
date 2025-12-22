@@ -15,9 +15,13 @@ if [ "$EUID" -ne 0 ]; then
 fi
 
 # Variables
-SSID="rocktimer"
-PASSWORD="rocktimer"
-IP_ADDRESS="192.168.50.1"
+SSID="${ROCKTIMER_SSID:-rocktimer}"
+PASSWORD="${ROCKTIMER_PASSWORD:-rocktimer}"
+IP_ADDRESS="${ROCKTIMER_IP_ADDRESS:-192.168.50.1}"
+SUBNET_CIDR="${ROCKTIMER_SUBNET_CIDR:-192.168.50.0/24}"
+AP_INTERFACE="${ROCKTIMER_AP_INTERFACE:-wlan0}"
+CH_DHCPCD_BEGIN="# RockTimer AP begin"
+CH_DHCPCD_END="# RockTimer AP end"
 
 echo "[1/4] Installing hostapd and dnsmasq..."
 apt-get update
@@ -28,17 +32,28 @@ systemctl stop hostapd || true
 systemctl stop dnsmasq || true
 
 echo "[3/4] Configuring dhcpcd..."
+tmp="$(mktemp)"
+awk -v b="${CH_DHCPCD_BEGIN}" -v e="${CH_DHCPCD_END}" '
+  $0==b {skip=1; next}
+  $0==e {skip=0; next}
+  !skip {print}
+' /etc/dhcpcd.conf > "${tmp}"
+cat "${tmp}" > /etc/dhcpcd.conf
+rm -f "${tmp}"
+
 cat >> /etc/dhcpcd.conf << EOF
 
+${CH_DHCPCD_BEGIN}
 # RockTimer Access Point
-interface wlan0
+interface ${AP_INTERFACE}
     static ip_address=${IP_ADDRESS}/24
     nohook wpa_supplicant
+${CH_DHCPCD_END}
 EOF
 
 echo "[4/4] Configuring hostapd..."
 cat > /etc/hostapd/hostapd.conf << EOF
-interface=wlan0
+interface=${AP_INTERFACE}
 driver=nl80211
 ssid=${SSID}
 hw_mode=g
@@ -50,7 +65,6 @@ ignore_broadcast_ssid=0
 wpa=2
 wpa_passphrase=${PASSWORD}
 wpa_key_mgmt=WPA-PSK
-wpa_pairwise=TKIP
 rsn_pairwise=CCMP
 EOF
 
@@ -58,9 +72,9 @@ EOF
 sed -i 's/#DAEMON_CONF=""/DAEMON_CONF="\/etc\/hostapd\/hostapd.conf"/' /etc/default/hostapd
 
 echo "Configuring dnsmasq (DHCP + DNS)..."
-mv /etc/dnsmasq.conf /etc/dnsmasq.conf.orig || true
+cp -n /etc/dnsmasq.conf /etc/dnsmasq.conf.orig || true
 cat > /etc/dnsmasq.conf << EOF
-interface=wlan0
+interface=${AP_INTERFACE}
 domain-needed
 bogus-priv
 expand-hosts

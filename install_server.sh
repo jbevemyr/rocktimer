@@ -435,7 +435,7 @@ cat > ${INSTALL_DIR}/kiosk_loading.html << 'EOF'
 <body>
   <div class="wrap">
     <div class="title">RockTimer</div>
-    <div class="sub">Startar… <span class="dot"></span></div>
+    <div class="sub">Starting… <span class="dot"></span></div>
   </div>
   <script>
     const TARGET = "http://localhost:8080";

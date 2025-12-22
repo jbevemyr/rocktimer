@@ -74,7 +74,7 @@ sudo ROCKTIMER_CONFIGURE_CHRONY=1 ./install_server.sh
 ### Pi Zero 2 W (Sensor: tee or hog_far)
 
 **Prerequisites**
-- Raspberry Pi OS installerat
+- Raspberry Pi OS installed
 - Wi‑Fi preconfigured to join the RockTimer SSID (default `rocktimer`)
 - SSH enabled (so you can run the installer remotely)
 
