@@ -1,24 +1,45 @@
-# RockTimer Configuration
-
-# Device ID (for sensors: tee, hog_close, hog_far)
+#
+# RockTimer configuration (example)
+#
+# device_id:
+# - tee       (Pi Zero @ tee/back line)
+# - hog_close (Pi 4 @ near hog)
+# - hog_far   (Pi Zero @ far hog)
 device_id: "tee"
 
-# GPIO
 gpio:
+  # LM393 digital output pin (default wiring uses GPIO17 / physical pin 11)
   sensor_pin: 17
+  # Debounce in ms (increase if you get double triggers)
   debounce_ms: 50
+  # Pi 4 only: IR arm sensor pin (GPIO27 / physical pin 13)
+  # arm_pin: 27
 
-# Server address (for sensors)
 server:
+  # Pi 4 IP/hostname (default if using setup_network.sh AP)
   host: "192.168.50.1"
-  port: 5000          # UDP port
-  http_port: 8080     # Web UI (Pi 4 only)
-  udp_port: 5000      # Same as port (Pi 4 only)
-  enable_speech: true # Enable speech announcements
-  alsa_device: "hw:0,0" # Optional: audio output device (Pi 4 analog jack is usually hw:0,0)
-  auto_arm_on_start: true # Optional: start in ARMED state on boot (Pi 4 server)
-  # Default speech options on startup (can also be changed at runtime via the Settings UI)
+  # UDP triggers (sensors -> server)
+  port: 5000
+  # Web UI (Pi 4 only)
+  http_port: 8080
+  # Server listen UDP (Pi 4 only; should match port)
+  udp_port: 5000
+
+  # Speech (Pi 4 only)
+  enable_speech: true
+  # ALSA output (optional). Examples: "hw:0,0" (3.5mm), "default"
+  alsa_device: "hw:0,0"
+  # Start ARMED at boot (Pi 4 only)
+  auto_arm_on_start: true
   speech:
     speak_ready: true
     speak_tee_hog: true
     speak_hog_hog: false
+
+  # Debug: log TTS spawns (optional)
+  # tts_debug_log: "/var/log/rocktimer-tts-spawn.log"
+
+# Optional/advanced (currently not used by the code, kept for future):
+# max_history: 100
+# ws_ping_interval: 30
+# sensor_timeout_ms: 100

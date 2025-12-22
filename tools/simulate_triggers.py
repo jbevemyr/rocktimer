@@ -9,16 +9,39 @@ import time
 import json
 import argparse
 import random
+import urllib.request
+import urllib.error
 from datetime import datetime
 
 DEFAULT_SERVER = "192.168.50.1"
 DEFAULT_PORT = 5000
+DEFAULT_HTTP_PORT = 8080
 
 # Realistic timing ranges (seconds)
 TEE_HOG_MIN = 2.80
 TEE_HOG_MAX = 3.30
 HOG_HOG_MIN = 8.0
 HOG_HOG_MAX = 14.0
+
+
+def arm_server(server_host: str, http_port: int, timeout_s: float = 1.0) -> bool:
+    """Best-effort: ask the RockTimer server to arm (rearm) via HTTP."""
+    url = f"http://{server_host}:{http_port}/api/arm"
+    req = urllib.request.Request(url, method="POST")
+    try:
+        with urllib.request.urlopen(req, timeout=timeout_s) as resp:
+            body = resp.read().decode("utf-8", errors="replace")
+        try:
+            data = json.loads(body) if body else {}
+        except json.JSONDecodeError:
+            data = {}
+        success = bool(data.get("success", True))
+        state = data.get("state", "unknown")
+        print(f"[{datetime.now().strftime('%H:%M:%S.%f')[:-3]}] Rearm: success={success} state={state}")
+        return success
+    except (urllib.error.URLError, TimeoutError, ConnectionError) as e:
+        print(f"[{datetime.now().strftime('%H:%M:%S.%f')[:-3]}] Rearm: failed ({e})")
+        return False
 
 
 def send_trigger(sock, server_addr, device_id: str):
@@ -70,6 +93,7 @@ def main():
     parser = argparse.ArgumentParser(description="Simulate RockTimer triggers via UDP")
     parser.add_argument("--server", default=DEFAULT_SERVER, help="Server IP address")
     parser.add_argument("--port", type=int, default=DEFAULT_PORT, help="Server UDP port")
+    parser.add_argument("--http-port", type=int, default=DEFAULT_HTTP_PORT, help="Server HTTP port (for /api/arm)")
     parser.add_argument("--device", choices=["tee", "hog_close", "hog_far"], 
                        help="Send a single trigger")
     parser.add_argument("--simulate", action="store_true", help="Simulate a full stone pass")
@@ -99,6 +123,9 @@ def main():
                 print(f"\n{'='*40}")
                 print(f"Stone {i+1} of {args.loop}")
                 print(f"{'='*40}")
+
+            # Rearm between runs (and also before the first run) so each simulated stone is measured.
+            arm_server(args.server, args.http_port)
             
             simulate_stone_pass(
                 sock, server_addr, 

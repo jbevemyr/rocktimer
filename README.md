@@ -2,13 +2,43 @@
 
 RockTimer is a DIY curling stone timing system that measures split times between the **tee line**, the **near hog line**, and the **far hog line** using simple laser trip sensors.
 
+**Perfect for:** Practice sessions, coaching, analyzing stone speed and release consistency
+
+## Key Features
+
+- ⏱️ **Accurate timing** between three trigger points (tee alt. backline, near hog, far hog)
+- 📱 **Touch-friendly UI** optimized for 5" displays (also works on phones/tablets)
+- 🔊 **Voice announcements** (optional) - speaks times using Piper TTS
+- 🌐 **Local Wi-Fi** - no internet required, Pi 4 creates its own network
+- 📊 **History tracking** - review previous measurements
+- ⚡ **Fast response** - WebSocket updates, instant feedback
+- 🔌 **Simple hardware** - laser modules + LM393 sensors + Raspberry Pi
+
+## System Overview
+
 It is designed for a **3‑Pi setup**:
 - **Pi 4 (server at near hog line)**: runs the central server + touchscreen UI + optional voice announcements
 - **2× Pi Zero 2 W (tee + far hog)**: read sensors and send trigger timestamps over UDP
 
-The goal is to provide a fast, touch-friendly display (and optional voice callouts) for practice and training—without needing external internet or cloud services.
+**Credit:** Inspired by Larry Ehnert's LarryRockTimer (`LarryRockTimer.com`).
 
-**Credit:** Inspired by Larry Ehnert’s LarryRockTimer (`LarryRockTimer.com`).
+## Quick Start Summary
+
+1. **Get hardware** (see Bill of Materials below): 1× Pi 4, 2× Pi Zero 2 W, 3× laser modules, 3× LM393 sensors
+2. **Install OS** on all three Pi's (Raspberry Pi OS Lite or Desktop)
+3. **Run installers:**
+   - Pi 4: `sudo ./install_server.sh` (sets up server + kiosk + Wi-Fi AP)
+   - Pi Zero: `sudo ./install_sensor.sh` (choose tee or hog_far)
+4. **Wire sensors** (see Wiring Diagrams below)
+5. **Test:** Open http://192.168.50.1:8080 and break the laser beams
+
+**Estimated build time:** 2-4 hours (first time, including OS installation)
+
+## Documentation
+
+- **[QUICKSTART.md](QUICKSTART.md)** - Step-by-step guide to build your first RockTimer (recommended for beginners)
+- **[ARCHITECTURE.md](ARCHITECTURE.md)** - Technical deep-dive: system design, protocols, data flow
+- **README.md** (this file) - Complete reference guide
 
 ## Overview
 
@@ -317,6 +347,47 @@ sudo ./install_sensor.sh
 # Choose: tee or hog_far
 ```
 
+## Updating / Upgrading
+
+RockTimer is installed to **`/opt/rocktimer`** and runs via systemd services. You can safely re-run the installers to apply updates.
+
+### Recommended update flow (Pi 4 + Pi Zero)
+
+1) **Backup your config**
+
+```bash
+sudo cp -a /opt/rocktimer/config.yaml /opt/rocktimer/config.yaml.bak.$(date -Is)
+```
+
+2) **Update code**
+
+If `/opt/rocktimer` contains a git checkout (it usually does after installation):
+
+```bash
+cd /opt/rocktimer
+sudo git pull
+```
+
+Otherwise, pull updates on your laptop and re-run the installer from the cloned repo.
+
+3) **Re-run installer (idempotent)**
+
+- Pi 4:
+
+```bash
+cd /opt/rocktimer
+sudo ./install_server.sh
+sudo systemctl restart rocktimer-server.service
+```
+
+- Pi Zero:
+
+```bash
+cd /opt/rocktimer
+sudo ./install_sensor.sh
+sudo systemctl restart rocktimer-sensor.service
+```
+
 ## Configuration
 
 Sensors only need to know the server IP:
@@ -331,9 +402,56 @@ server:
 
 ## Hardware
 
-## Hardware (Bill of Materials)
-
 If you want to build your own RockTimer setup, this is the hardware used in this project.
+
+### Bill of Materials (BOM)
+
+**Complete shopping list for one RockTimer system:**
+
+#### Compute Units
+- 1× Raspberry Pi 4 Model B (4GB or 8GB recommended)
+- 2× Raspberry Pi Zero 2 W
+- 3× MicroSD cards (32GB+ recommended, Class 10 or better)
+- 3× Power banks (Pi 4: 10000mAh+, Pi Zero: 5000mAh+)
+- 3× USB cables for power (USB-C for Pi 4, Micro-USB for Pi Zero)
+
+#### Display (Optional, but recommended for Pi 4)
+- 1× Elecrow RC050 5-inch HDMI capacitive touch LCD (800×480)
+  - Alternative: Any HDMI touchscreen or regular display
+  - Or: Use phone/tablet instead via Wi-Fi
+
+#### Sensors (3 trigger points: tee, hog_close, hog_far)
+- 3× LM393 light sensor modules
+- 1× IR proximity sensor module (for arm trigger on Pi 4)
+
+#### Laser Modules
+- 3× Red dot laser heads (3–5V, 650nm, 5mW, 6mm diameter)
+- 3× Battery holders with switch (3× AA, 4.5V output)
+- 9× AA batteries (3 per holder)
+
+#### Audio (Optional - for voice announcements)
+- 1× PAM8403 or HW-104 amplifier module
+- 1× Speaker (3W, 4–8Ω, ~40mm diameter)
+- 1× B103 potentiometer (10kΩ) for volume control
+- 1× 3.5mm audio cable
+
+#### Electronics & Wiring
+- Dupont jumper wires (male-female, female-female)
+- Heat-shrink tubing
+- Optional: project boxes/enclosures
+
+
+### Placement on the ice (practical build notes)
+
+- **Sensor locations**:
+  - **Tee**: on the tee line, or on the back line if you prefer to time from there
+  - **Hog close**: near hog line (this is the Pi 4 location)
+  - **Hog far**: far hog line
+- **Laser + receiver**: mount **opposite** each other across the sheet so the beam crosses the stone path.
+- **Height**: aim the beam so it reliably breaks on a passing stone but does not clip brooms/feet (you may need to experiment).
+- **Alignment**: start by aligning the laser to the receiver at close distance, then move out to full width and fine-tune.
+- **Stability**: small movements matter; use rigid brackets and avoid “floppy” stands.
+- **Safety**: use low-power laser modules and avoid pointing at eyes; confirm local rules for your facility.
 
 ### Compute + Display
 - **1× Raspberry Pi 4 Model B** (central server at the near hog line)
@@ -366,24 +484,84 @@ If you want to build your own RockTimer setup, this is the hardware used in this
 - Jumper wires / Dupont cables, screw terminals, heat-shrink, etc.
 - Mounting hardware for sensors + lasers (brackets/holders) to keep alignment stable.
 
-### Timing sensor (all Pi's)
+### Wiring Diagrams
+
+#### Timing sensor (LM393 - all Pi's)
+
+Connect the LM393 light sensor to GPIO 17 on all three Raspberry Pi units:
+
 ```
-LM393 Light sensor  →  Raspberry Pi
-─────────────────────────────────
-VCC               →  3.3V (pin 1)
-GND               →  GND (pin 6)
-DO                →  GPIO 17 (pin 11)
+LM393 Light Sensor    →    Raspberry Pi (all units)
+──────────────────────────────────────────────────
+VCC (power)           →    Pin 1  (3.3V)
+GND (ground)          →    Pin 6  (GND)
+DO  (digital out)     →    Pin 11 (GPIO 17)
 ```
 
-### Arm sensor (Pi 4 only)
+**Pin layout reference (looking at GPIO header, USB ports facing down):**
 ```
-IR Sensor  →  Raspberry Pi 4
-────────────────────────────
-VCC        →  3.3V (pin 17)
-GND        →  GND (pin 14)
-DO         →  GPIO 27 (pin 13)
+     3.3V [1] [2]  5V
+          [3] [4]  5V
+          [5] [6]  GND  ← GND
+          [7] [8]
+      GND [9] [10]
+ GPIO 17 [11] [12]     ← GPIO 17 (DO)
+          ↑
 ```
-Hold your hand in front of the IR sensor to arm the system.
+
+**Notes:**
+- The LM393 module typically has a potentiometer to adjust trigger sensitivity
+- Test the sensor: the onboard LED should light when the laser beam is broken
+- Adjust the potentiometer until it reliably triggers on beam break but not on ambient light
+
+#### Arm sensor (IR proximity - Pi 4 only)
+
+The IR sensor is used to arm the system by waving your hand in front of it:
+
+```
+IR Proximity Sensor   →    Raspberry Pi 4
+──────────────────────────────────────────
+VCC (power)           →    Pin 17 (3.3V)
+GND (ground)          →    Pin 14 (GND)
+DO  (digital out)     →    Pin 13 (GPIO 27)
+```
+
+**Usage:** Hold your hand ~5cm in front of the IR sensor to arm the system. The sensor typically has a range adjustment - set it to 5-10cm for best results.
+
+#### Complete system wiring (Pi 4 with all sensors + audio)
+
+```
+┌─────────────────────────────────────────────────────┐
+│                  Raspberry Pi 4                      │
+│                                                      │
+│  [GPIO Header]         [Audio Jack]    [HDMI]       │
+│   │ │ │ │ │               │              │          │
+└───┼─┼─┼─┼─┼───────────────┼──────────────┼──────────┘
+    │ │ │ │ │               │              │
+    │ │ │ │ │               │         [Touchscreen]
+    │ │ │ │ │               │
+    │ │ │ │ │               └─────[Volume pot]──[Amplifier]──[Speaker]
+    │ │ │ │ │
+    │ │ │ │ └─── IR Sensor (GPIO 27, arm trigger)
+    │ │ │ └───── GND
+    │ │ └─────── LM393 Sensor (GPIO 17, hog_close timing)
+    │ └───────── GND
+    └─────────── 3.3V (power for both sensors)
+```
+
+### Bring-up checklist (first successful run)
+
+- **Server up**:
+  - `systemctl status rocktimer-server.service --no-pager`
+  - Open UI: `http://<pi4-ip>:8080`
+- **Sensors up**:
+  - `systemctl status rocktimer-sensor.service --no-pager`
+  - Watch logs while breaking the beam: `sudo journalctl -u rocktimer-sensor -f`
+- **End-to-end test without hardware (UDP simulation)**:
+
+```bash
+python tools/simulate_triggers.py --server 127.0.0.1 --simulate
+```
 
 ### Audio - Amplifier and speaker (Pi 4)
 
@@ -490,6 +668,209 @@ python tools/simulate_triggers.py --simulate
 
 # Single trigger
 python tools/simulate_triggers.py --device tee
+
+# Simulate 5 stones in a row (useful for testing)
+python tools/simulate_triggers.py --simulate --loop 5
+
+# Test sensor hardware directly (on Pi Zero or Pi 4)
+sudo python tools/test_sensor.py
+```
+
+## Troubleshooting
+
+### Server won't start
+
+**Symptoms:** `systemctl status rocktimer-server` shows failed/error
+
+**Solutions:**
+```bash
+# Check logs for error details
+sudo journalctl -u rocktimer-server -n 50
+
+# Common issues:
+# 1. Port 8080 already in use - change http_port in config.yaml
+# 2. Config file missing or invalid - verify /opt/rocktimer/config.yaml exists
+# 3. Python dependencies missing - re-run install_server.sh
+
+# Test server manually to see errors directly
+cd /opt/rocktimer
+sudo venv/bin/python server/main.py
+```
+
+### Sensors not triggering
+
+**Symptoms:** Breaking the laser beam doesn't register on the server
+
+**Solutions:**
+```bash
+# 1. Test the sensor locally (on the Pi with the sensor)
+sudo python /opt/rocktimer/tools/test_sensor.py
+# This should print "TRIGGER!" when you break the beam
+
+# 2. Check sensor wiring
+# - VCC → 3.3V (NOT 5V, it can damage the Pi!)
+# - GND → GND
+# - DO → GPIO 17
+
+# 3. Verify sensor logs
+sudo journalctl -u rocktimer-sensor -f
+# You should see "TRIGGER! tee" (or hog_far) when breaking beam
+
+# 4. Check network connectivity (for Pi Zero sensors)
+ping 192.168.50.1  # Should respond if connected to Pi 4 Wi-Fi
+
+# 5. Test UDP manually from Pi Zero to Pi 4
+echo '{"type":"trigger","device_id":"tee","timestamp_ns":1234567890}' | nc -u 192.168.50.1 5000
+```
+
+### No voice announcements
+
+**Symptoms:** Times display correctly but no audio
+
+**Solutions:**
+```bash
+# 1. Check if speech is enabled in Settings (via web UI)
+
+# 2. Test audio output as root (server runs as root)
+sudo aplay /usr/share/sounds/alsa/Front_Center.wav
+
+# 3. Force analog audio jack (if using Pi 4 headphone output)
+sudo amixer cset numid=3 1
+
+# 4. Test Piper TTS directly
+sudo /opt/piper/speak.sh "ready to go"
+
+# 5. Check TTS logs
+sudo tail -f /var/log/rocktimer-tts.log
+
+# 6. Verify speaker wiring (see audio diagram in Hardware section)
+```
+
+### Touchscreen not working (kiosk mode)
+
+**Symptoms:** Display shows Chromium but touch doesn't work
+
+**Solutions:**
+```bash
+# 1. Check if kiosk service is running
+systemctl status rocktimer-kiosk
+
+# 2. Test touch in terminal
+# Install evtest: sudo apt-get install evtest
+sudo evtest
+# Select the touch device and tap the screen
+
+# 3. Chromium may need touch calibration
+# Add this to /boot/firmware/config.txt (or /boot/config.txt on older systems):
+# dtoverlay=rpi-ft5406  # For official Pi touchscreen
+# Reboot after editing
+
+# 4. Manual test (stop kiosk first)
+sudo systemctl stop rocktimer-kiosk
+export DISPLAY=:0
+chromium --kiosk http://localhost:8080
+```
+
+### Time synchronization issues
+
+**Symptoms:** Measurements show impossible times or negative values
+
+**Solutions:**
+```bash
+# 1. Check chrony sync status on all Pi's
+chronyc tracking
+chronyc sources -v
+
+# 2. On Pi Zero, verify it's syncing to Pi 4
+chronyc sources -v
+# Should show 192.168.50.1 with '*' or '=' (selected source)
+
+# 3. Force time sync (on Pi Zero)
+sudo systemctl restart chrony
+# Wait 10 seconds
+chronyc tracking
+# "System time" offset should be < 1ms
+
+# 4. If Pi 4 has no internet and shows wrong time
+# Manually set time on Pi 4 (it will then serve as time source for sensors)
+sudo date -s "2024-12-22 15:30:00"
+sudo systemctl restart chrony
+```
+
+### Network issues (Pi 4 as AP)
+
+**Symptoms:** Pi Zero can't connect to rocktimer Wi-Fi
+
+**Solutions:**
+```bash
+# 1. Verify AP is running on Pi 4
+sudo systemctl status hostapd
+sudo systemctl status dnsmasq
+
+# 2. Check if wlan0 has the correct IP
+ip addr show wlan0
+# Should show 192.168.50.1
+
+# 3. Restart network services
+sudo systemctl restart dhcpcd
+sudo systemctl restart hostapd
+sudo systemctl restart dnsmasq
+
+# 4. Check for Wi-Fi interference
+# Change channel in /etc/hostapd/hostapd.conf
+# Replace: channel=7
+# With: channel=1 or channel=11
+sudo systemctl restart hostapd
+
+# 5. Verify Pi Zero Wi-Fi config
+# On Pi Zero, edit /etc/wpa_supplicant/wpa_supplicant.conf
+network={
+    ssid="rocktimer"
+    psk="rocktimer"
+    key_mgmt=WPA-PSK
+}
+```
+
+### Web UI shows old data or won't update
+
+**Symptoms:** Times don't update in real-time
+
+**Solutions:**
+```bash
+# 1. Check WebSocket connection in browser console (F12)
+# Should see: "WebSocket connected"
+
+# 2. Hard refresh the page
+# Chrome/Edge: Ctrl+Shift+R
+# Firefox: Ctrl+F5
+
+# 3. Clear browser cache
+# Settings → Privacy → Clear browsing data
+
+# 4. Test from different device
+# Connect phone to rocktimer Wi-Fi
+# Open: http://192.168.50.1:8080
+```
+
+### General debugging
+
+```bash
+# View all logs
+sudo journalctl -u rocktimer-server -f    # Server (Pi 4)
+sudo journalctl -u rocktimer-sensor -f    # Sensor (Pi Zero)
+sudo journalctl -u rocktimer-kiosk -f     # Kiosk display (Pi 4)
+
+# Check system resources
+htop
+
+# Verify Python dependencies
+cd /opt/rocktimer
+source venv/bin/activate
+pip list
+
+# Full reinstall (last resort)
+cd /opt/rocktimer
+sudo ./install_server.sh  # or install_sensor.sh
 ```
 
 ## API

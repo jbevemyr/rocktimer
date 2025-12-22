@@ -13,26 +13,44 @@ if [ "$EUID" -ne 0 ]; then
     exit 1
 fi
 
-# Ask for device ID
-echo ""
-echo "Where is this sensor located?"
-echo "  1) tee - At the tee line"
-echo "  2) hog_far - At the far hog line"
-read -p "Choose (1 or 2): " CHOICE
-
-case $CHOICE in
-    1) DEVICE_ID="tee" ;;
-    2) DEVICE_ID="hog_far" ;;
-    *) echo "Invalid choice"; exit 1 ;;
-esac
-
-echo "Configuring as: ${DEVICE_ID}"
-
 # Install path
 INSTALL_DIR="/opt/rocktimer"
 USER="${SUDO_USER:-$(whoami)}"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Ask for device ID (default to existing config if present)
+echo ""
+existing_device_id=""
+if [ -f "${INSTALL_DIR}/config.yaml" ]; then
+    existing_device_id="$(awk -F'"' '/^device_id:/ {print $2; exit}' "${INSTALL_DIR}/config.yaml" 2>/dev/null || true)"
+fi
+
+if [ "${existing_device_id}" = "tee" ] || [ "${existing_device_id}" = "hog_far" ]; then
+    echo "Detected existing device_id in ${INSTALL_DIR}/config.yaml: ${existing_device_id}"
+    read -r -p "Keep this location? Press Enter to keep, or type tee/hog_far: " in_device
+    DEVICE_ID="${in_device:-${existing_device_id}}"
+else
+    echo "Where is this sensor located?"
+    echo "  1) tee - At the tee line"
+    echo "  2) hog_far - At the far hog line"
+    read -r -p "Choose (1 or 2): " CHOICE
+
+    case $CHOICE in
+        1) DEVICE_ID="tee" ;;
+        2) DEVICE_ID="hog_far" ;;
+        *) echo "Invalid choice"; exit 1 ;;
+    esac
+fi
+
+if [ "${DEVICE_ID}" != "tee" ] && [ "${DEVICE_ID}" != "hog_far" ]; then
+    echo "Invalid device_id: ${DEVICE_ID} (must be tee or hog_far)"
+    exit 1
+fi
+
+echo "Configuring as: ${DEVICE_ID}"
 
 echo "Installing for user: ${USER}"
+echo "Source directory: ${SCRIPT_DIR}"
 
 echo "[1/5] Installing system dependencies..."
 apt-get update
@@ -41,12 +59,27 @@ apt-get install -y \
     python3-venv \
     python3-lgpio \
     python3-gpiozero \
-    chrony
+    chrony \
+    tar
 
 echo "[2/5] Creating install directory..."
-mkdir -p ${INSTALL_DIR}
-cp -r . ${INSTALL_DIR}/
-chown -R ${USER}:${USER} ${INSTALL_DIR}
+mkdir -p "${INSTALL_DIR}"
+
+# Copy source into /opt/rocktimer (safe to re-run).
+# If the script is already running from /opt/rocktimer, do NOT copy recursively into itself.
+if [ "${SCRIPT_DIR}" != "${INSTALL_DIR}" ]; then
+    echo "Copying files to ${INSTALL_DIR}..."
+    tar \
+        --exclude='./venv' \
+        --exclude='./__pycache__' \
+        --exclude='./.pytest_cache' \
+        --exclude='./config.yaml' \
+        -cf - -C "${SCRIPT_DIR}" . | tar -xpf - -C "${INSTALL_DIR}"
+else
+    echo "NOTE: Running from ${INSTALL_DIR}; skipping copy step."
+fi
+
+chown -R "${USER}:${USER}" "${INSTALL_DIR}"
 
 echo "[3/5] Creating Python virtual environment..."
 cd ${INSTALL_DIR}

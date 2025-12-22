@@ -37,13 +37,25 @@ logger = logging.getLogger('rocktimer-sensor')
 
 
 class SensorDaemon:
-    """Main sensor daemon class."""
+    """Main sensor daemon class for remote timing sensors.
+    
+    Runs on Pi Zero 2 W units at the tee line and far hog line.
+    
+    Responsibilities:
+    - Monitor GPIO pin for laser trip sensor (LM393)
+    - Capture high-precision timestamp (nanoseconds) on trigger
+    - Send trigger event to server via UDP
+    - Automatic reconnection handling (UDP is connectionless)
+    
+    The sensor runs continuously and sends triggers regardless of server state.
+    The server decides whether to act on incoming triggers based on its state.
+    """
     
     def __init__(self, config_path: Path = CONFIG_PATH):
         self.config = self._load_config(config_path)
-        self.device_id = self.config['device_id']
+        self.device_id = self.config['device_id']  # "tee" or "hog_far"
         self.running = True
-        self.sensor_button = None
+        self.sensor_button = None  # gpiozero Button for the sensor
         
         # UDP socket
         self.udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)

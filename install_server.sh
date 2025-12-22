@@ -16,8 +16,10 @@ fi
 # Install path
 INSTALL_DIR="/opt/rocktimer"
 USER="${SUDO_USER:-$(whoami)}"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 echo "Installing for user: ${USER}"
+echo "Source directory: ${SCRIPT_DIR}"
 
 echo "[1/5] Installing system dependencies..."
 apt-get update
@@ -34,9 +36,24 @@ apt-get install -y \
     tar
 
 echo "[2/5] Creating install directory..."
-mkdir -p ${INSTALL_DIR}
-cp -r . ${INSTALL_DIR}/
-chown -R ${USER}:${USER} ${INSTALL_DIR}
+mkdir -p "${INSTALL_DIR}"
+
+# Copy source into /opt/rocktimer (safe to re-run).
+# If the script is already running from /opt/rocktimer, do NOT copy recursively into itself.
+if [ "${SCRIPT_DIR}" != "${INSTALL_DIR}" ]; then
+    echo "Copying files to ${INSTALL_DIR}..."
+    # Preserve permissions and dotfiles, but do not overwrite local runtime/config artifacts.
+    tar \
+        --exclude='./venv' \
+        --exclude='./__pycache__' \
+        --exclude='./.pytest_cache' \
+        --exclude='./config.yaml' \
+        -cf - -C "${SCRIPT_DIR}" . | tar -xpf - -C "${INSTALL_DIR}"
+else
+    echo "NOTE: Running from ${INSTALL_DIR}; skipping copy step."
+fi
+
+chown -R "${USER}:${USER}" "${INSTALL_DIR}"
 
 echo "[3/5] Creating Python virtual environment..."
 cd ${INSTALL_DIR}

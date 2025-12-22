@@ -120,14 +120,30 @@ class TimingSession:
 
 
 class RockTimerServer:
-    """Main class for the RockTimer server."""
+    """Main class for the RockTimer server.
+    
+    Responsibilities:
+    - Listen for UDP triggers from remote sensors (Pi Zero units)
+    - Handle local GPIO sensor (hog_close timing sensor on Pi 4)
+    - Manage system state (idle, armed, measuring, completed)
+    - Calculate split times between trigger points
+    - Broadcast state updates to WebSocket clients
+    - Optional: speak times via TTS
+    - Maintain measurement history
+    
+    State machine:
+        IDLE → ARMED (via arm button or IR sensor)
+        ARMED → MEASURING (on first trigger)
+        MEASURING → COMPLETED (on hog_close trigger)
+        COMPLETED → IDLE (automatically or via rearm)
+    """
     
     def __init__(self, config_path: Path = CONFIG_PATH):
         self.config = self._load_config(config_path)
         self.state = SystemState.IDLE
         self.session = TimingSession()
         self.websocket_clients: list[WebSocket] = []
-        self._loop = None  # Set when the server starts
+        self._loop = None  # Event loop reference, set when the server starts
         
         # Speech settings (runtime). Defaults come from config, but can be changed via /api/settings.
         speech_cfg = self.config.get('server', {}).get('speech', {}) or {}
@@ -499,11 +515,20 @@ class RockTimerServer:
     async def _broadcast_state(self):
         state = self.get_state()
         message = json.dumps({'type': 'state_update', 'data': state})
-        
-        for ws in self.websocket_clients:
+
+        # Iterate over a snapshot so connect/disconnect can't break iteration.
+        dead: list[WebSocket] = []
+        for ws in list(self.websocket_clients):
             try:
                 await ws.send_text(message)
             except Exception:
+                dead.append(ws)
+
+        # Drop dead sockets so the list does not grow forever.
+        for ws in dead:
+            try:
+                self.websocket_clients.remove(ws)
+            except ValueError:
                 pass
 
 
@@ -555,7 +580,7 @@ async def get_times(limit: int = 50):
 
 
 @app.post("/api/clear")
-async def clear_times():
+async def clear_times_legacy():
     server.clear_history()
     return {"success": True}
 
@@ -603,9 +628,16 @@ async def websocket_endpoint(websocket: WebSocket):
                 server.arm()
             elif message.get('type') == 'disarm':
                 server.disarm()
-                
+
     except WebSocketDisconnect:
-        server.websocket_clients.remove(websocket)
+        pass
+    except Exception:
+        logger.exception("WebSocket error")
+    finally:
+        try:
+            server.websocket_clients.remove(websocket)
+        except ValueError:
+            pass
 
 
 static_path = Path(__file__).parent / "static"
