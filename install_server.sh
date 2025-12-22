@@ -139,8 +139,11 @@ PHRASE_DIR="${CACHE_DIR}/phrases"
 SIL="${CACHE_DIR}/silence_60ms.raw"
 
 is_time_phrase=0
-# Accept "3 point 1 8" and also "12 point 1 1" (for hog-hog like 12.11)
-if echo "${TEXT}" | grep -Eq '^[0-9]+ point( [0-9]+)+$'; then
+# Accept:
+# - "3 point 10" (two-digit hundredths)
+# - "3 point 00"
+# - "3 point oh 6" (leading zero)
+if echo "${TEXT}" | grep -Eq '^[0-9]+ point ([0-9]{2}|oh [0-9])$'; then
   is_time_phrase=1
 fi
 
@@ -292,9 +295,19 @@ PIPER_LENGTH_SCALE="${ROCKTIMER_PIPER_LENGTH_SCALE:-0.75}"
 PIPER_SENTENCE_SILENCE="${ROCKTIMER_PIPER_SENTENCE_SILENCE:-0.0}"
 TOKEN_PAUSE_MS="${ROCKTIMER_TTS_TOKEN_PAUSE_MS:-20}"
 
-# Generate raw fragments for digits + "point" (used by the UI's time callouts like "3 point 1 8").
+# Generate raw fragments for digits + hundredths + "point"/"oh" (used by the UI's time callouts).
 # This avoids re-loading the model on every callout.
-for token in 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 point; do
+# - We keep 0-9 for the "oh X" case.
+# - We generate 00-99 for the "point NN" case.
+for token in point oh 0 1 2 3 4 5 6 7 8 9; do
+    out="${FRAG_DIR}/${token}.raw"
+    if [ ! -s "${out}" ]; then
+        echo "${token}" | "${PIPER_BIN}" --model "${PIPER_MODEL}" --output-raw --length_scale "${PIPER_LENGTH_SCALE}" --sentence_silence "${PIPER_SENTENCE_SILENCE}" > "${out}"
+    fi
+done
+
+for i in $(seq 0 99); do
+    token="$(printf "%02d" "${i}")"
     out="${FRAG_DIR}/${token}.raw"
     if [ ! -s "${out}" ]; then
         echo "${token}" | "${PIPER_BIN}" --model "${PIPER_MODEL}" --output-raw --length_scale "${PIPER_LENGTH_SCALE}" --sentence_silence "${PIPER_SENTENCE_SILENCE}" > "${out}"

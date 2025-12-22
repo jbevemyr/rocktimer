@@ -402,12 +402,20 @@ class RockTimerServer:
             # Convert to seconds
             seconds = time_ms / 1000.0
             
-            # Format exactly like the UI and speak it
+            # Format exactly like the UI and speak it.
+            # We speak hundredths in a more natural way:
+            # - "3.10" -> "3 point 10"
+            # - "3.06" -> "3 point oh 6"
+            # - "3.00" -> "3 point 00"
             formatted = f"{seconds:.2f}"  # "3.18"
-            whole, dec = formatted.split('.')
-            # Speak each decimal digit to avoid "ninety seven" (e.g. "2.97" -> "2 point 9 7")
-            dec_digits = " ".join(dec)
-            text = f"{whole} point {dec_digits}"  # "3 point 1 8"
+            whole, dec = formatted.split('.')  # dec is always 2 digits
+            if dec == "00":
+                dec_spoken = "00"
+            elif dec.startswith("0"):
+                dec_spoken = f"oh {dec[1]}"
+            else:
+                dec_spoken = dec
+            text = f"{whole} point {dec_spoken}"
             
             logger.info(f"Speaking: '{text}'")
             
