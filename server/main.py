@@ -135,7 +135,8 @@ class RockTimerServer:
         IDLE → ARMED (via arm button or IR sensor)
         ARMED → MEASURING (on first trigger)
         MEASURING → COMPLETED (on hog_close trigger)
-        COMPLETED → IDLE (automatically or via rearm)
+        COMPLETED → ARMED (via rearm/arm)
+        COMPLETED → IDLE (via disarm)
     """
     
     def __init__(self, config_path: Path = CONFIG_PATH):

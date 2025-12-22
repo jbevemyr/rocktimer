@@ -45,7 +45,7 @@ class SensorDaemon:
     - Monitor GPIO pin for laser trip sensor (LM393)
     - Capture high-precision timestamp (nanoseconds) on trigger
     - Send trigger event to server via UDP
-    - Automatic reconnection handling (UDP is connectionless)
+    - Best-effort sending over UDP (no connection state to maintain)
     
     The sensor runs continuously and sends triggers regardless of server state.
     The server decides whether to act on incoming triggers based on its state.

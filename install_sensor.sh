@@ -22,7 +22,9 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 echo ""
 existing_device_id=""
 if [ -f "${INSTALL_DIR}/config.yaml" ]; then
-    existing_device_id="$(awk -F'"' '/^device_id:/ {print $2; exit}' "${INSTALL_DIR}/config.yaml" 2>/dev/null || true)"
+    # Accept both quoted and unquoted YAML, e.g.:
+    # device_id: "tee"  OR  device_id: tee
+    existing_device_id="$(sed -n -E 's/^[[:space:]]*device_id:[[:space:]]*\"?([A-Za-z0-9_]+)\"?.*/\1/p' "${INSTALL_DIR}/config.yaml" 2>/dev/null | head -n 1 || true)"
 fi
 
 if [ "${existing_device_id}" = "tee" ] || [ "${existing_device_id}" = "hog_far" ]; then
@@ -94,7 +96,8 @@ if [ ! -f ${INSTALL_DIR}/config.yaml ]; then
 fi
 
 # Set device_id
-sed -i "s/device_id: \"tee\"/device_id: \"${DEVICE_ID}\"/" ${INSTALL_DIR}/config.yaml
+# Replace the entire device_id line regardless of previous value.
+sed -i -E "s/^[[:space:]]*device_id:[[:space:]]*.*/device_id: \"${DEVICE_ID}\"/" ${INSTALL_DIR}/config.yaml
 
 echo "[4b/5] Optional: configuring time sync (chrony)..."
 CHRONY_CONF="/etc/chrony/chrony.conf"
