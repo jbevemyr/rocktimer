@@ -9,10 +9,16 @@ This document describes the technical architecture of RockTimer.
 │                         CURLING SHEET                               │
 │                                                                     │
 │  TEE LINE          NEAR HOG LINE (back)      FAR HOG LINE (front)   │
-│     │                      │                        │               │
-│     ▼                      ▼                        ▼               │
+│     │                     │                       │                 │
+│     ▼                     ▼                       ▼                 │
 │  ┌──────┐              ┌──────┐                ┌──────┐             │
 │  │Laser │◄────────────►│Laser │◄──────────────►│Laser │             │
+│  └──┬───┘              └──┬───┘                └──┬───┘             │
+│     v                     v                       v                 │
+│     v                     v                       v                 │
+│     v                     v                       v                 │
+│  ┌──────┐              ┌──────┐                ┌──────┐             │
+│  │Sensor│◄────────────►│Sensor│◄──────────────►│Sensor│             │
 │  │      │  ~10m        │      │    ~30m        │      │             │
 │  └──┬───┘              └──┬───┘                └──┬───┘             │
 │     │                     │                       │                 │
@@ -22,8 +28,6 @@ This document describes the technical architecture of RockTimer.
       │                     │ (IR sensor)           │
       ▼                     ▼                       ▼
    ┌─────────┐         ┌─────────┐             ┌─────────┐
-   | Sensor  |         | Sensor  |             | Sensor  |
-   |         |         |         |             |         |
    │Pi Zero 2│         │ Pi 4    │             │Pi Zero 2│
    │  "tee"  │         │"hog_close"            │"hog_far"│
    │         │         │         │             │         │

@@ -34,7 +34,7 @@ server:
   speech:
     speak_ready: true
     speak_tee_hog: true
-    speak_hog_hog: false
+    speak_hog_hog: true
 
   # Debug: log TTS spawns (optional)
   # tts_debug_log: "/var/log/rocktimer-tts-spawn.log"
