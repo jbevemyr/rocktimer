@@ -102,6 +102,10 @@ RATE="22050"
 FMT="S16_LE"
 CH="1"
 
+# Piper tuning (lower length_scale = faster speech). Can be overridden via env vars.
+LENGTH_SCALE="${ROCKTIMER_PIPER_LENGTH_SCALE:-0.75}"
+SENTENCE_SILENCE="${ROCKTIMER_PIPER_SENTENCE_SILENCE:-0.0}"
+
 log() { echo "$("${DATE}" -Is) $*" >> "${LOG}"; }
 
 if [ ! -x "${PIPER}" ]; then
@@ -195,7 +199,7 @@ fi
 tmp="$("${MKTEMP}" /tmp/rocktimer-tts.XXXXXX.raw)"
 trap '"${RM}" -f "$tmp"' EXIT
 
-if ! echo "${TEXT}" | "${PIPER}" --model "${MODEL}" --output-raw > "${tmp}" 2>> "${LOG}"; then
+if ! echo "${TEXT}" | "${PIPER}" --model "${MODEL}" --output-raw --length_scale "${LENGTH_SCALE}" --sentence_silence "${SENTENCE_SILENCE}" > "${tmp}" 2>> "${LOG}"; then
   log "ERROR: piper failed"
   exit 1
 fi
@@ -243,21 +247,27 @@ CACHE_DIR="/opt/piper/cache"
 FRAG_DIR="${CACHE_DIR}/fragments"
 mkdir -p "${FRAG_DIR}"
 
+# Defaults: keep callouts snappy on Raspberry Pi
+PIPER_LENGTH_SCALE="${ROCKTIMER_PIPER_LENGTH_SCALE:-0.75}"
+PIPER_SENTENCE_SILENCE="${ROCKTIMER_PIPER_SENTENCE_SILENCE:-0.0}"
+TOKEN_PAUSE_MS="${ROCKTIMER_TTS_TOKEN_PAUSE_MS:-20}"
+
 # Generate raw fragments for digits + "point" (used by the UI's time callouts like "3 point 1 8").
 # This avoids re-loading the model on every callout.
 for token in 0 1 2 3 4 5 6 7 8 9 point; do
     out="${FRAG_DIR}/${token}.raw"
     if [ ! -s "${out}" ]; then
-        echo "${token}" | "${PIPER_BIN}" --model "${PIPER_MODEL}" --output-raw > "${out}"
+        echo "${token}" | "${PIPER_BIN}" --model "${PIPER_MODEL}" --output-raw --length_scale "${PIPER_LENGTH_SCALE}" --sentence_silence "${PIPER_SENTENCE_SILENCE}" > "${out}"
     fi
 done
 
-# Small silence buffer (~60ms) between tokens
+# Small silence buffer between tokens
 SIL="${CACHE_DIR}/silence_60ms.raw"
 if [ ! -s "${SIL}" ]; then
-    python3 - <<'PY'
+    TOKEN_PAUSE_MS="${TOKEN_PAUSE_MS}" python3 - <<'PY'
 rate=22050
-ms=60
+import os
+ms=int(os.environ.get("TOKEN_PAUSE_MS","20"))
 samples=int(rate*(ms/1000.0))
 with open("/opt/piper/cache/silence_60ms.raw","wb") as f:
     f.write(b"\x00\x00"*samples)

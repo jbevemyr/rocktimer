@@ -404,6 +404,19 @@ To force the fast path, set:
 ROCKTIMER_TTS_FAST=1
 ```
 
+You can also tune Piper speech speed and the pause between digits:
+
+```bash
+# Faster speech (lower is faster). Default: 0.75
+ROCKTIMER_PIPER_LENGTH_SCALE=0.75
+
+# Silence after each sentence (seconds). Default: 0.0
+ROCKTIMER_PIPER_SENTENCE_SILENCE=0.0
+
+# Pause between tokens in the stitched digit callouts (ms). Default: 20
+ROCKTIMER_TTS_TOKEN_PAUSE_MS=20
+```
+
 **Parts:**
 - HW-104 or PAM8403 amplifier module
 - B103 potentiometer (10kΩ) for volume control
