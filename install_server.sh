@@ -334,6 +334,7 @@ Type=simple
 User=root
 WorkingDirectory=${INSTALL_DIR}
 Environment="PATH=${INSTALL_DIR}/venv/bin"
+Environment="ROCKTIMER_TTS_FAST=1"
 ExecStart=${INSTALL_DIR}/venv/bin/python ${INSTALL_DIR}/server/main.py
 Restart=always
 RestartSec=5
