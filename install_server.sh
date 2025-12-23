@@ -70,18 +70,38 @@ fi
 echo "[4b/5] Installing Piper TTS..."
 PIPER_DIR="/opt/piper"
 PIPER_VOICE_DIR="${PIPER_DIR}/voices"
-PIPER_BIN="${PIPER_DIR}/piper"
 PIPER_MODEL="${PIPER_VOICE_DIR}/en_US-lessac-medium.onnx"
 
 mkdir -p "${PIPER_VOICE_DIR}"
 
+# Resolve piper binary location (release tarballs sometimes unpack into a subdir).
+resolve_piper_bin() {
+    local cand
+    for cand in "${PIPER_DIR}/piper" "${PIPER_DIR}/piper/piper"; do
+        if [ -f "${cand}" ]; then
+            echo "${cand}"
+            return 0
+        fi
+    done
+    find "${PIPER_DIR}" -maxdepth 4 -type f -name piper 2>/dev/null | head -n 1
+}
+
 # Download piper binary (arm64)
-if [ ! -x "${PIPER_BIN}" ]; then
+PIPER_BIN="$(resolve_piper_bin || true)"
+if [ -z "${PIPER_BIN}" ] || [ ! -f "${PIPER_BIN}" ]; then
     tmpdir="$(mktemp -d)"
     wget -q -O "${tmpdir}/piper_arm64.tar.gz" "https://github.com/rhasspy/piper/releases/download/v1.2.0/piper_arm64.tar.gz"
     tar -xzf "${tmpdir}/piper_arm64.tar.gz" -C "${PIPER_DIR}"
     rm -rf "${tmpdir}"
 fi
+
+PIPER_BIN="$(resolve_piper_bin || true)"
+if [ -z "${PIPER_BIN}" ] || [ ! -f "${PIPER_BIN}" ]; then
+    echo "ERROR: piper binary not found under ${PIPER_DIR}"
+    echo "Hint: try: sudo rm -rf ${PIPER_DIR} && re-run install_server.sh"
+    exit 1
+fi
+chmod +x "${PIPER_BIN}" || true
 
 # Download voice model
 if [ ! -f "${PIPER_MODEL}" ]; then
@@ -107,7 +127,17 @@ if [ -z "${TEXT}" ]; then
   exit 0
 fi
 
-PIPER="/opt/piper/piper"
+# Resolve piper binary location (tarballs may unpack into /opt/piper/piper/piper)
+PIPER=""
+for cand in /opt/piper/piper /opt/piper/piper/piper; do
+  if [ -f "${cand}" ]; then
+    PIPER="${cand}"
+    break
+  fi
+done
+if [ -z "${PIPER}" ]; then
+  PIPER="$(find /opt/piper -maxdepth 4 -type f -name piper 2>/dev/null | head -n 1 || true)"
+fi
 MODEL="/opt/piper/voices/en_US-lessac-medium.onnx"
 APLAY="/usr/bin/aplay"
 LOG="/var/log/rocktimer-tts.log"
@@ -126,7 +156,7 @@ SENTENCE_SILENCE="${ROCKTIMER_PIPER_SENTENCE_SILENCE:-0.0}"
 
 log() { echo "$("${DATE}" -Is) $*" >> "${LOG}"; }
 
-if [ ! -x "${PIPER}" ]; then
+if [ -z "${PIPER}" ] || [ ! -x "${PIPER}" ]; then
   log "ERROR: piper not found at ${PIPER}"
   exit 1
 fi
