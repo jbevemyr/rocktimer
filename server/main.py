@@ -145,6 +145,11 @@ class RockTimerServer:
         self.session = TimingSession()
         self.websocket_clients: list[WebSocket] = []
         self._loop = None  # Event loop reference, set when the server starts
+
+        # Sensor liveness tracking (remote sensors send periodic heartbeats).
+        # Map: device_id -> { last_seen_ts: float, addr: (ip, port), source: str }
+        self.sensor_last_seen: dict[str, dict] = {}
+        self.sensor_timeout_s: float = float(self.config.get('server', {}).get('sensor_timeout_s', 12.0))
         
         # Speech settings (runtime). Defaults come from config, but can be changed via /api/settings.
         speech_cfg = self.config.get('server', {}).get('speech', {}) or {}
@@ -288,17 +293,84 @@ class RockTimerServer:
                 data, addr = self.udp_socket.recvfrom(1024)
                 payload = json.loads(data.decode('utf-8'))
                 
-                if payload.get('type') == 'trigger':
+                msg_type = payload.get('type')
+                if msg_type == 'trigger':
                     device_id = payload.get('device_id')
                     timestamp_ns = payload.get('timestamp_ns')
-                    
+                    if device_id:
+                        self._mark_sensor_seen(device_id, addr, source='trigger')
                     if device_id and timestamp_ns:
                         self._handle_trigger(device_id, timestamp_ns)
+                elif msg_type == 'heartbeat':
+                    device_id = payload.get('device_id')
+                    if device_id:
+                        self._mark_sensor_seen(device_id, addr, source='heartbeat')
                         
             except OSError:
                 break
             except json.JSONDecodeError as e:
                 logger.error(f"Ogiltigt JSON: {e}")
+
+    def _mark_sensor_seen(self, device_id: str, addr, source: str):
+        """Record that a sensor was seen recently (heartbeat or trigger)."""
+        try:
+            ip, port = addr
+        except Exception:
+            ip, port = None, None
+        self.sensor_last_seen[str(device_id)] = {
+            'last_seen_ts': time.time(),
+            'ip': ip,
+            'port': port,
+            'source': source
+        }
+
+    def get_sensors_status(self) -> dict:
+        """Return sensor liveness status for the UI."""
+        now = time.time()
+        # Always show these three sensors in the UI; hog_close is local on the Pi 4.
+        sensors = [
+            {'device_id': 'tee', 'label': 'Tee'},
+            {'device_id': 'hog_close', 'label': 'Hog nära'},
+            {'device_id': 'hog_far', 'label': 'Hog bort'},
+        ]
+
+        out = []
+        for s in sensors:
+            device_id = s['device_id']
+            meta = self.sensor_last_seen.get(device_id)
+
+            # Local hog_close doesn't send heartbeat; mark as "local" (neutral) unless we've seen a trigger.
+            if device_id == 'hog_close' and meta is None:
+                out.append({
+                    **s,
+                    'status': 'local',
+                    'last_seen_s_ago': None,
+                    'ip': None,
+                    'source': None
+                })
+                continue
+
+            if meta is None:
+                out.append({
+                    **s,
+                    'status': 'offline',
+                    'last_seen_s_ago': None,
+                    'ip': None,
+                    'source': None
+                })
+                continue
+
+            age = float(now - float(meta.get('last_seen_ts', now)))
+            status = 'online' if age <= self.sensor_timeout_s else 'offline'
+            out.append({
+                **s,
+                'status': status,
+                'last_seen_s_ago': round(age, 1),
+                'ip': meta.get('ip'),
+                'source': meta.get('source')
+            })
+
+        return {'timeout_s': self.sensor_timeout_s, 'sensors': out}
     
     def _handle_trigger(self, device_id: str, timestamp_ns: int):
         """Handle a trigger from a sensor."""
@@ -568,6 +640,11 @@ async def disarm_system():
 @app.get("/api/status")
 async def get_status():
     return server.get_state()
+
+
+@app.get("/api/sensors")
+async def get_sensors():
+    return server.get_sensors_status()
 
 
 @app.get("/api/current")

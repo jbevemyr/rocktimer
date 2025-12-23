@@ -186,6 +186,13 @@ On your phone/laptop, connect to "rocktimer" Wi-Fi and open:
 
 You should see the RockTimer interface with two time cards.
 
+#### Sensor status indicators (Pi 4 UI)
+
+In the top bar of the UI you will see three small dots (Tee / Hog nära / Hog bort).
+- **Green**: sensor is alive (heartbeat/triggers seen recently)
+- **Red**: sensor appears offline
+- **Gray**: local hog sensor (Pi 4) / no heartbeat expected
+
 #### 3. Test sensors manually
 
 **On each Pi Zero:**

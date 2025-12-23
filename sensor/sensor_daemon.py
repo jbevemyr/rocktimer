@@ -12,7 +12,9 @@ import yaml
 import logging
 import signal
 import sys
+import threading
 from pathlib import Path
+from typing import Optional
 
 # Try importing gpiozero
 try:
@@ -56,6 +58,7 @@ class SensorDaemon:
         self.device_id = self.config['device_id']  # "tee" or "hog_far"
         self.running = True
         self.sensor_button = None  # gpiozero Button for the sensor
+        self._heartbeat_thread: Optional[threading.Thread] = None
         
         # UDP socket
         self.udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -63,9 +66,13 @@ class SensorDaemon:
             self.config['server']['host'],
             self.config['server']['port']
         )
+
+        # Heartbeat interval (seconds). Allows the server UI to show which sensors are alive.
+        self.heartbeat_interval_s = float(self.config.get('server', {}).get('heartbeat_interval_s', 5.0))
         
         logger.info(f"Sensor: {self.device_id}")
         logger.info(f"Server: {self.server_address}")
+        logger.info(f"Heartbeat interval: {self.heartbeat_interval_s:.1f}s")
         
     def _load_config(self, config_path: Path) -> dict:
         """Load configuration from YAML file."""
@@ -117,6 +124,26 @@ class SensorDaemon:
             self.udp_socket.sendto(data, self.server_address)
         except Exception as e:
             logger.error(f"Could not send UDP: {e}")
+
+    def _send_heartbeat(self):
+        """Send periodic heartbeats to the server."""
+        # Send one immediately on startup.
+        next_send = 0.0
+        while self.running:
+            now = time.time()
+            if now >= next_send:
+                payload = {
+                    'type': 'heartbeat',
+                    'device_id': self.device_id,
+                    'timestamp_ns': time.time_ns()
+                }
+                try:
+                    data = json.dumps(payload).encode('utf-8')
+                    self.udp_socket.sendto(data, self.server_address)
+                except Exception as e:
+                    logger.error(f"Could not send heartbeat UDP: {e}")
+                next_send = now + self.heartbeat_interval_s
+            time.sleep(0.2)
     
     def _signal_handler(self, signum, frame):
         """Handle shutdown signals."""
@@ -134,6 +161,10 @@ class SensorDaemon:
         self._setup_gpio()
         
         logger.info("Sensor daemon started - sending triggers to server")
+
+        # Heartbeat thread (daemon so process can exit cleanly)
+        self._heartbeat_thread = threading.Thread(target=self._send_heartbeat, daemon=True)
+        self._heartbeat_thread.start()
         
         # Keep the process alive
         while self.running:
