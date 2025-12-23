@@ -330,8 +330,8 @@ class RockTimerServer:
         # Always show these three sensors in the UI; hog_close is local on the Pi 4.
         sensors = [
             {'device_id': 'tee', 'label': 'Tee'},
-            {'device_id': 'hog_close', 'label': 'Hog nära'},
-            {'device_id': 'hog_far', 'label': 'Hog bort'},
+            {'device_id': 'hog_close', 'label': 'Hog near'},
+            {'device_id': 'hog_far', 'label': 'Hog far'},
         ]
 
         out = []
