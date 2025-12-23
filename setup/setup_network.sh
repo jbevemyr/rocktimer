@@ -20,7 +20,9 @@ PASSWORD="${ROCKTIMER_PASSWORD:-rocktimer}"
 IP_ADDRESS="${ROCKTIMER_IP_ADDRESS:-192.168.50.1}"
 SUBNET_CIDR="${ROCKTIMER_SUBNET_CIDR:-192.168.50.0/24}"
 AP_INTERFACE="${ROCKTIMER_AP_INTERFACE:-wlan0}"
-ENABLE_INTERNET_SHARING="${ROCKTIMER_ENABLE_INTERNET_SHARING:-0}"
+# Internet sharing (NAT) is enabled by default so Pi Zero clients can reach the internet
+# via the Pi 4 uplink (typically eth0). Set ROCKTIMER_ENABLE_INTERNET_SHARING=0 to disable.
+ENABLE_INTERNET_SHARING="${ROCKTIMER_ENABLE_INTERNET_SHARING:-1}"
 # Uplink interface used for internet access when sharing is enabled (typically eth0 if Pi 4 is wired)
 UPLINK_INTERFACE="${ROCKTIMER_UPLINK_INTERFACE:-eth0}"
 CH_DHCPCD_BEGIN="# RockTimer AP begin"
@@ -152,7 +154,21 @@ systemctl enable dnsmasq
 # Try to bring the interface up immediately (some OS images keep it down until hostapd starts).
 ip link set "${AP_INTERFACE}" up 2>/dev/null || true
 
+uplink_ok=1
 if [ "${ENABLE_INTERNET_SHARING}" = "1" ]; then
+  # Best-effort guard: don't try NAT if uplink interface doesn't exist.
+  if ! ip link show "${UPLINK_INTERFACE}" >/dev/null 2>&1; then
+    uplink_ok=0
+    echo "WARNING: Uplink interface '${UPLINK_INTERFACE}' not found; skipping internet sharing."
+  fi
+  # Also require a default route via the uplink (otherwise clients won't reach the internet anyway).
+  if [ "${uplink_ok}" = "1" ] && ! ip route show default 2>/dev/null | grep -q " dev ${UPLINK_INTERFACE}"; then
+    uplink_ok=0
+    echo "WARNING: No default route via '${UPLINK_INTERFACE}'; skipping internet sharing."
+  fi
+fi
+
+if [ "${ENABLE_INTERNET_SHARING}" = "1" ] && [ "${uplink_ok}" = "1" ]; then
   echo ""
   echo "Enabling internet sharing (NAT) from ${SUBNET_CIDR} via ${UPLINK_INTERFACE}..."
 
@@ -212,7 +228,11 @@ echo "WiFi SSID: ${SSID}"
 echo "Password: ${PASSWORD}"
 echo "Server IP: ${IP_ADDRESS}"
 if [ "${ENABLE_INTERNET_SHARING}" = "1" ]; then
-  echo "Internet sharing: ENABLED (uplink: ${UPLINK_INTERFACE})"
+  if [ "${uplink_ok}" = "1" ]; then
+    echo "Internet sharing: ENABLED (uplink: ${UPLINK_INTERFACE})"
+  else
+    echo "Internet sharing: skipped (no uplink via ${UPLINK_INTERFACE})"
+  fi
 else
   echo "Internet sharing: disabled (set ROCKTIMER_ENABLE_INTERNET_SHARING=1 to enable)"
 fi

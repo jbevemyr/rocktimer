@@ -72,10 +72,9 @@ sudo ./setup/setup_splash.sh
 
 # Set up Wi-Fi Access Point
 sudo ./setup/setup_network.sh
-
-# Optional: allow Pi Zero clients on the rocktimer Wi‑Fi to reach the internet via the Pi 4 Ethernet port.
-# (Enables IPv4 forwarding + NAT.)
-# sudo ROCKTIMER_ENABLE_INTERNET_SHARING=1 ROCKTIMER_UPLINK_INTERFACE=eth0 ./setup/setup_network.sh
+# Note: this also enables internet sharing (NAT) by default so Pi Zero clients can reach the internet
+# via the Pi 4 uplink (typically eth0). To disable:
+# sudo ROCKTIMER_ENABLE_INTERNET_SHARING=0 ./setup/setup_network.sh
 
 # Reboot to activate Wi-Fi AP
 sudo reboot
