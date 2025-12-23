@@ -31,17 +31,22 @@ echo "[2/4] Stopping services..."
 systemctl stop hostapd || true
 systemctl stop dnsmasq || true
 
-echo "[3/4] Configuring dhcpcd..."
-tmp="$(mktemp)"
-awk -v b="${CH_DHCPCD_BEGIN}" -v e="${CH_DHCPCD_END}" '
-  $0==b {skip=1; next}
-  $0==e {skip=0; next}
-  !skip {print}
-' /etc/dhcpcd.conf > "${tmp}"
-cat "${tmp}" > /etc/dhcpcd.conf
-rm -f "${tmp}"
+echo "[3/4] Configuring interface IP (${AP_INTERFACE} -> ${IP_ADDRESS}/24)..."
 
-cat >> /etc/dhcpcd.conf << EOF
+# Prefer dhcpcd when it exists and is used by the OS (classic Raspberry Pi OS setup).
+# On newer Debian/Raspberry Pi OS variants NetworkManager is often used and dhcpcd.service may be absent.
+if systemctl list-unit-files 2>/dev/null | grep -qE '^dhcpcd\.service'; then
+    echo "Using dhcpcd for static IP."
+    tmp="$(mktemp)"
+    awk -v b="${CH_DHCPCD_BEGIN}" -v e="${CH_DHCPCD_END}" '
+      $0==b {skip=1; next}
+      $0==e {skip=0; next}
+      !skip {print}
+    ' /etc/dhcpcd.conf > "${tmp}"
+    cat "${tmp}" > /etc/dhcpcd.conf
+    rm -f "${tmp}"
+
+    cat >> /etc/dhcpcd.conf << EOF
 
 ${CH_DHCPCD_BEGIN}
 # RockTimer Access Point
@@ -50,6 +55,34 @@ interface ${AP_INTERFACE}
     nohook wpa_supplicant
 ${CH_DHCPCD_END}
 EOF
+
+    systemctl enable dhcpcd >/dev/null 2>&1 || true
+else
+    echo "dhcpcd.service not found; configuring NetworkManager/systemd-networkd (common on newer OS images)."
+
+    # Ensure NetworkManager does not manage the AP interface (hostapd needs full control).
+    if systemctl is-active --quiet NetworkManager 2>/dev/null; then
+        mkdir -p /etc/NetworkManager/conf.d
+        cat > /etc/NetworkManager/conf.d/99-rocktimer-unmanaged-wlan0.conf << EOF
+[keyfile]
+unmanaged-devices=interface-name:${AP_INTERFACE}
+EOF
+        systemctl restart NetworkManager || true
+    fi
+
+    # Configure static IP via systemd-networkd for just the AP interface.
+    mkdir -p /etc/systemd/network
+    cat > /etc/systemd/network/99-rocktimer-${AP_INTERFACE}.network << EOF
+[Match]
+Name=${AP_INTERFACE}
+
+[Network]
+Address=${IP_ADDRESS}/24
+ConfigureWithoutCarrier=yes
+EOF
+    systemctl enable systemd-networkd >/dev/null 2>&1 || true
+    systemctl restart systemd-networkd || true
+fi
 
 echo "[4/4] Configuring hostapd..."
 cat > /etc/hostapd/hostapd.conf << EOF
@@ -109,6 +142,9 @@ echo "Enabling services..."
 systemctl unmask hostapd
 systemctl enable hostapd
 systemctl enable dnsmasq
+
+# Try to bring the interface up immediately (some OS images keep it down until hostapd starts).
+ip link set "${AP_INTERFACE}" up 2>/dev/null || true
 
 echo ""
 echo "==================================="
