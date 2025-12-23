@@ -27,8 +27,10 @@ server:
 
   # Speech (Pi 4 only)
   enable_speech: true
-  # ALSA output (optional). Examples: "hw:0,0" (3.5mm), "default"
-  alsa_device: "hw:0,0"
+  # ALSA output (optional).
+  # Prefer named devices (stable across reboots): "default:CARD=Headphones"
+  # You can list devices with: aplay -L
+  alsa_device: "default:CARD=Headphones"
   # Start ARMED at boot (Pi 4 only)
   auto_arm_on_start: true
   speech:

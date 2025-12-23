@@ -11,7 +11,9 @@ server:
   host: "0.0.0.0"
   http_port: 8080
   udp_port: 5000
-  alsa_device: "hw:0,0"
+  enable_speech: true
+  # Prefer named device (more stable than hw:N,N across reboots)
+  alsa_device: "default:CARD=Headphones"
   auto_arm_on_start: true
   speech:
     speak_ready: true
