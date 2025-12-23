@@ -58,6 +58,14 @@ sudo ./install_server.sh
 # Re-runs are much faster.
 # Answer "Y" when asked about chrony
 
+# Start services now (optional, but recommended so you can verify everything works)
+sudo systemctl start rocktimer-server
+
+# Enable + start kiosk mode (recommended if using a Pi 4 touchscreen)
+# "enable" makes it start automatically on boot.
+sudo systemctl enable rocktimer-kiosk
+sudo systemctl start rocktimer-kiosk
+
 # Set up Wi-Fi Access Point
 sudo ./setup/setup_network.sh
 
