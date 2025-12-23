@@ -53,6 +53,9 @@ cd rocktimer
 
 # Run installer (sets up server + kiosk + Wi-Fi AP + time sync)
 sudo ./install_server.sh
+# Note: first run can take a few minutes. It downloads Piper TTS + voice model and
+# generates a cache of small audio fragments under /opt/piper/cache for fast callouts.
+# Re-runs are much faster.
 # Answer "Y" when asked about chrony
 
 # Set up Wi-Fi Access Point
