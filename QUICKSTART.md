@@ -66,6 +66,10 @@ sudo systemctl start rocktimer-server
 sudo systemctl enable rocktimer-kiosk
 sudo systemctl start rocktimer-kiosk
 
+# Optional: add a boot splash screen (Plymouth)
+# Reboot is required to see it.
+sudo ./setup/setup_splash.sh
+
 # Set up Wi-Fi Access Point
 sudo ./setup/setup_network.sh
 
