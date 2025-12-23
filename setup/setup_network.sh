@@ -154,6 +154,10 @@ systemctl enable dnsmasq
 # Try to bring the interface up immediately (some OS images keep it down until hostapd starts).
 ip link set "${AP_INTERFACE}" up 2>/dev/null || true
 
+# Start services now so the AP comes up immediately (no reboot needed for first test).
+systemctl daemon-reload >/dev/null 2>&1 || true
+systemctl restart hostapd dnsmasq || true
+
 uplink_ok=1
 if [ "${ENABLE_INTERNET_SHARING}" = "1" ]; then
   # Best-effort guard: don't try NAT if uplink interface doesn't exist.

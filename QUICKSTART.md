@@ -76,6 +76,10 @@ sudo ./setup/setup_network.sh
 # via the Pi 4 uplink (typically eth0). To disable:
 # sudo ROCKTIMER_ENABLE_INTERNET_SHARING=0 ./setup/setup_network.sh
 
+# Quick verification (no reboot needed just to test):
+# ip -brief addr show wlan0   # should show 192.168.50.1/24
+# systemctl status hostapd dnsmasq --no-pager
+
 # Reboot to activate Wi-Fi AP
 sudo reboot
 ```
