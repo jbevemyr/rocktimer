@@ -12,6 +12,13 @@ import random
 import urllib.request
 import urllib.error
 from datetime import datetime
+from pathlib import Path
+from typing import Optional, Tuple
+
+try:
+    import yaml  # type: ignore
+except Exception:  # pragma: no cover
+    yaml = None
 
 DEFAULT_SERVER = "192.168.50.1"
 DEFAULT_PORT = 5000
@@ -22,6 +29,27 @@ TEE_HOG_MIN = 2.80
 TEE_HOG_MAX = 3.30
 HOG_HOG_MIN = 8.0
 HOG_HOG_MAX = 14.0
+
+
+def _load_server_from_config(config_path: Path) -> Optional[Tuple[str, int, int]]:
+    """Load (host, udp_port, http_port) from a RockTimer config.yaml if available."""
+    if yaml is None:
+        return None
+    if not config_path.exists():
+        return None
+    try:
+        with open(config_path, "r", encoding="utf-8") as f:
+            cfg = yaml.safe_load(f) or {}
+        server = (cfg or {}).get("server", {}) or {}
+        host = server.get("host") or DEFAULT_SERVER
+        udp_port = int(server.get("udp_port") or server.get("port") or DEFAULT_PORT)
+        http_port = int(server.get("http_port") or DEFAULT_HTTP_PORT)
+        # If server binds to 0.0.0.0, clients should connect via loopback/real IP.
+        if host == "0.0.0.0":
+            host = "127.0.0.1"
+        return host, udp_port, http_port
+    except Exception:
+        return None
 
 
 def arm_server(server_host: str, http_port: int, timeout_s: float = 1.0) -> bool:
@@ -91,9 +119,10 @@ def simulate_stone_pass(sock, server_addr, delay_tee_hog: float = None, delay_ho
 
 def main():
     parser = argparse.ArgumentParser(description="Simulate RockTimer triggers via UDP")
-    parser.add_argument("--server", default=DEFAULT_SERVER, help="Server IP address")
-    parser.add_argument("--port", type=int, default=DEFAULT_PORT, help="Server UDP port")
-    parser.add_argument("--http-port", type=int, default=DEFAULT_HTTP_PORT, help="Server HTTP port (for /api/arm)")
+    parser.add_argument("--server", default=None, help="Server IP/hostname (default: from config.yaml if found, else 192.168.50.1)")
+    parser.add_argument("--port", type=int, default=None, help="Server UDP port (default: from config.yaml if found, else 5000)")
+    parser.add_argument("--http-port", type=int, default=None, help="Server HTTP port (for /api/arm) (default: from config.yaml if found, else 8080)")
+    parser.add_argument("--config", default=None, help="Path to config.yaml (default: ./config.yaml, then /opt/rocktimer/config.yaml)")
     parser.add_argument("--device", choices=["tee", "hog_close", "hog_far"], 
                        help="Send a single trigger")
     parser.add_argument("--simulate", action="store_true", help="Simulate a full stone pass")
@@ -109,8 +138,25 @@ def main():
                        help="Seconds between stone passes when using --loop")
     
     args = parser.parse_args()
-    
-    server_addr = (args.server, args.port)
+
+    # Resolve defaults from config when available (helps when running on the Pi 4 locally).
+    config_candidates = []
+    if args.config:
+        config_candidates.append(Path(args.config))
+    else:
+        config_candidates.extend([Path("config.yaml"), Path("/opt/rocktimer/config.yaml")])
+
+    cfg_resolved = None
+    for p in config_candidates:
+        cfg_resolved = _load_server_from_config(p)
+        if cfg_resolved:
+            break
+
+    server_host = args.server or (cfg_resolved[0] if cfg_resolved else DEFAULT_SERVER)
+    udp_port = int(args.port or (cfg_resolved[1] if cfg_resolved else DEFAULT_PORT))
+    http_port = int(args.http_port or (cfg_resolved[2] if cfg_resolved else DEFAULT_HTTP_PORT))
+
+    server_addr = (server_host, udp_port)
     print(f"Server: {server_addr[0]}:{server_addr[1]}")
     
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -125,7 +171,7 @@ def main():
                 print(f"{'='*40}")
 
             # Rearm between runs (and also before the first run) so each simulated stone is measured.
-            arm_server(args.server, args.http_port)
+            arm_server(server_host, http_port)
             
             simulate_stone_pass(
                 sock, server_addr, 
