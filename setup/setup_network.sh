@@ -20,6 +20,8 @@ PASSWORD="${ROCKTIMER_PASSWORD:-rocktimer}"
 IP_ADDRESS="${ROCKTIMER_IP_ADDRESS:-192.168.50.1}"
 SUBNET_CIDR="${ROCKTIMER_SUBNET_CIDR:-192.168.50.0/24}"
 AP_INTERFACE="${ROCKTIMER_AP_INTERFACE:-wlan0}"
+# Wi-Fi regulatory domain / country code for hostapd (improves client compatibility)
+COUNTRY_CODE="${ROCKTIMER_COUNTRY_CODE:-SE}"
 # Internet sharing (NAT) is enabled by default so Pi Zero clients can reach the internet
 # via the Pi 4 uplink (typically eth0). Set ROCKTIMER_ENABLE_INTERNET_SHARING=0 to disable.
 ENABLE_INTERNET_SHARING="${ROCKTIMER_ENABLE_INTERNET_SHARING:-1}"
@@ -93,10 +95,13 @@ echo "[4/4] Configuring hostapd..."
 cat > /etc/hostapd/hostapd.conf << EOF
 interface=${AP_INTERFACE}
 driver=nl80211
+country_code=${COUNTRY_CODE}
+ieee80211d=1
 ssid=${SSID}
 hw_mode=g
 channel=7
-wmm_enabled=0
+wmm_enabled=1
+ieee80211n=1
 macaddr_acl=0
 auth_algs=1
 ignore_broadcast_ssid=0
