@@ -40,6 +40,7 @@ except ImportError:
 
 # Config path
 CONFIG_PATH = Path(__file__).parent.parent / "config.yaml"
+RUNTIME_SETTINGS_PATH = Path(__file__).parent.parent / "runtime_settings.json"
 
 # Logging
 logging.basicConfig(
@@ -170,6 +171,9 @@ class RockTimerServer:
         })
         self._measurement_token: int = 0
         self._auto_rearm_future = None  # concurrent.futures.Future from run_coroutine_threadsafe
+
+        # Persisted runtime settings override (survives restarts even if config.yaml isn't edited).
+        self._load_runtime_settings()
         
         # In-memory history
         self.history: list[TimingRecord] = []
@@ -433,7 +437,6 @@ class RockTimerServer:
     def _complete_measurement(self):
         """Complete measurement after hog_close."""
         self.state = SystemState.COMPLETED
-        self._cancel_auto_rearm()
         
         record = TimingRecord(
             id=self._next_id,
@@ -604,10 +607,53 @@ class RockTimerServer:
         # Only act if we are still on the same "measurement" and still measuring.
         if token != self._measurement_token:
             return
-        if self.state != SystemState.MEASURING:
+        # Auto-rearm regardless of whether all sensors were seen.
+        # If we're still MEASURING (hung run) or COMPLETED (run finished but user didn't rearm),
+        # force the system back to ARMED.
+        if self.state not in (SystemState.MEASURING, SystemState.COMPLETED):
             return
         logger.info(f"Auto-rearm timeout: {after_s:.0f}s since first trigger, forcing ARMED")
         self.arm(force=True)
+
+    def _load_runtime_settings(self) -> None:
+        """Load persisted settings overrides (best-effort)."""
+        try:
+            if not RUNTIME_SETTINGS_PATH.exists():
+                return
+            data = json.loads(RUNTIME_SETTINGS_PATH.read_text(encoding='utf-8') or '{}')
+            if not isinstance(data, dict):
+                return
+            for k in (
+                'speech_enabled',
+                'speak_tee_hog',
+                'speak_hog_hog',
+                'speak_ready',
+                'auto_rearm_enabled',
+                'auto_rearm_after_s',
+            ):
+                if k in data:
+                    self.speech_settings[k] = data[k]
+            logger.info(f"Loaded runtime settings from {RUNTIME_SETTINGS_PATH}: {data}")
+        except Exception as e:
+            logger.warning(f"Failed to load runtime settings: {e}")
+
+    def save_runtime_settings(self) -> None:
+        """Persist current settings overrides (best-effort, atomic write)."""
+        try:
+            payload = {
+                'speech_enabled': bool(self.speech_settings.get('speech_enabled', False)),
+                'speak_tee_hog': bool(self.speech_settings.get('speak_tee_hog', True)),
+                'speak_hog_hog': bool(self.speech_settings.get('speak_hog_hog', False)),
+                'speak_ready': bool(self.speech_settings.get('speak_ready', True)),
+                'auto_rearm_enabled': bool(self.speech_settings.get('auto_rearm_enabled', False)),
+                'auto_rearm_after_s': int(self.speech_settings.get('auto_rearm_after_s', 120)),
+            }
+            tmp = RUNTIME_SETTINGS_PATH.with_suffix('.tmp')
+            tmp.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding='utf-8')
+            tmp.replace(RUNTIME_SETTINGS_PATH)
+            logger.info(f"Saved runtime settings to {RUNTIME_SETTINGS_PATH}: {payload}")
+        except Exception as e:
+            logger.warning(f"Failed to save runtime settings: {e}")
     
     def get_history(self, limit: int = 50) -> list[dict]:
         return [
@@ -743,6 +789,8 @@ async def update_settings(request: Request):
     # Clamp to sane range: 0..30 min
     after_s = max(0, min(after_s, 30 * 60))
     server.speech_settings['auto_rearm_after_s'] = after_s
+    # Persist so it survives restarts
+    server.save_runtime_settings()
     logger.info(f"Settings uppdaterade: {server.speech_settings}")
     return {"success": True}
 
