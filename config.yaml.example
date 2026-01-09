@@ -33,6 +33,11 @@ server:
   alsa_device: "default:CARD=Headphones"
   # Start ARMED at boot (Pi 4 only)
   auto_arm_on_start: true
+  # Auto-rearm back to ARMED if we get stuck in MEASURING after the first trigger.
+  # Useful if a run is aborted / sensor missed and the UI would otherwise stay "measuring".
+  auto_rearm:
+    enabled: false
+    after_s: 120
   speech:
     speak_ready: true
     speak_tee_hog: true

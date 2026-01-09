@@ -159,6 +159,17 @@ class RockTimerServer:
             'speak_hog_hog': bool(speech_cfg.get('speak_hog_hog', False)),
             'speak_ready': bool(speech_cfg.get('speak_ready', True)),
         }
+
+        # Auto-rearm settings (runtime). Used to recover if we get stuck in MEASURING.
+        auto_rearm_cfg = self.config.get('server', {}).get('auto_rearm', {}) or {}
+        self.speech_settings.update({
+            # If enabled: after first trigger moves ARMED -> MEASURING, auto-arm back to ARMED
+            # after N seconds, but only if we are still in MEASURING.
+            'auto_rearm_enabled': bool(auto_rearm_cfg.get('enabled', False)),
+            'auto_rearm_after_s': int(auto_rearm_cfg.get('after_s', 120)),
+        })
+        self._measurement_token: int = 0
+        self._auto_rearm_future = None  # concurrent.futures.Future from run_coroutine_threadsafe
         
         # In-memory history
         self.history: list[TimingRecord] = []
@@ -393,6 +404,8 @@ class RockTimerServer:
         if self.state == SystemState.ARMED:
             self.state = SystemState.MEASURING
             self.session.started_at = datetime.now()
+            self._measurement_token += 1
+            self._schedule_auto_rearm(self._measurement_token)
         
         # Record timestamp (first only for each sensor, in correct order)
         if device_id == 'tee' and not self.session.tee_time_ns:
@@ -420,6 +433,7 @@ class RockTimerServer:
     def _complete_measurement(self):
         """Complete measurement after hog_close."""
         self.state = SystemState.COMPLETED
+        self._cancel_auto_rearm()
         
         record = TimingRecord(
             id=self._next_id,
@@ -528,14 +542,21 @@ class RockTimerServer:
         except Exception as e:
             logger.error(f"TTS error: {e}")
     
-    def arm(self):
-        """Arm the system."""
-        if self.state not in [SystemState.IDLE, SystemState.COMPLETED]:
+    def arm(self, force: bool = False):
+        """Arm the system.
+
+        Normal behavior: only allow IDLE/COMPLETED -> ARMED.
+        If force=True, also allow MEASURING -> ARMED (used by auto-rearm timeout).
+        """
+        if not force and self.state not in [SystemState.IDLE, SystemState.COMPLETED]:
+            return False
+        if force and self.state not in [SystemState.IDLE, SystemState.COMPLETED, SystemState.MEASURING]:
             return False
         
         self.session.reset()
         self.state = SystemState.ARMED
         logger.info("ARMED")
+        self._cancel_auto_rearm()
         # Broadcast first so UI updates instantly, then speak (which is non-blocking anyway)
         self.broadcast_state()
         if self.speech_settings.get('speak_ready', True):
@@ -547,8 +568,46 @@ class RockTimerServer:
         self.state = SystemState.IDLE
         self.session.reset()
         logger.info("DISARMED")
+        self._cancel_auto_rearm()
         self.broadcast_state()
         return True
+
+    def _cancel_auto_rearm(self):
+        fut = self._auto_rearm_future
+        self._auto_rearm_future = None
+        try:
+            if fut is not None and not fut.done():
+                fut.cancel()
+        except Exception:
+            pass
+
+    def _schedule_auto_rearm(self, token: int):
+        """Schedule a forced arm back to ARMED if we remain stuck in MEASURING."""
+        self._cancel_auto_rearm()
+        if not self.speech_settings.get('auto_rearm_enabled', False):
+            return
+        try:
+            after_s = float(self.speech_settings.get('auto_rearm_after_s', 120))
+        except Exception:
+            after_s = 120.0
+        if after_s <= 0:
+            return
+
+        if self._loop and self._loop.is_running():
+            self._auto_rearm_future = asyncio.run_coroutine_threadsafe(
+                self._auto_rearm_after_delay(token, after_s),
+                self._loop
+            )
+
+    async def _auto_rearm_after_delay(self, token: int, after_s: float):
+        await asyncio.sleep(after_s)
+        # Only act if we are still on the same "measurement" and still measuring.
+        if token != self._measurement_token:
+            return
+        if self.state != SystemState.MEASURING:
+            return
+        logger.info(f"Auto-rearm timeout: {after_s:.0f}s since first trigger, forcing ARMED")
+        self.arm(force=True)
     
     def get_history(self, limit: int = 50) -> list[dict]:
         return [
@@ -675,6 +734,15 @@ async def update_settings(request: Request):
     server.speech_settings['speak_tee_hog'] = settings.get('speak_tee_hog', True)
     server.speech_settings['speak_hog_hog'] = settings.get('speak_hog_hog', False)
     server.speech_settings['speak_ready'] = settings.get('speak_ready', True)
+    # Auto-rearm (optional)
+    server.speech_settings['auto_rearm_enabled'] = bool(settings.get('auto_rearm_enabled', False))
+    try:
+        after_s = int(settings.get('auto_rearm_after_s', server.speech_settings.get('auto_rearm_after_s', 120)))
+    except Exception:
+        after_s = int(server.speech_settings.get('auto_rearm_after_s', 120))
+    # Clamp to sane range: 0..30 min
+    after_s = max(0, min(after_s, 30 * 60))
+    server.speech_settings['auto_rearm_after_s'] = after_s
     logger.info(f"Settings uppdaterade: {server.speech_settings}")
     return {"success": True}
 

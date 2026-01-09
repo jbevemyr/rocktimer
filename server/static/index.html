@@ -417,6 +417,29 @@
             cursor: pointer;
         }
         .btn-save:active { transform: scale(0.98); }
+
+        .btn-secondary {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #e5e5e7;
+            border-radius: 10px;
+            background: #f5f5f7;
+            color: #1d1d1f;
+            font-family: inherit;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 8px;
+            margin-bottom: 8px;
+        }
+        .btn-secondary:active { transform: scale(0.98); }
+
+        .setting-note {
+            color: #86868b;
+            font-size: 0.85rem;
+            line-height: 1.3;
+            margin-top: 6px;
+        }
     </style>
 </head>
 <body>
@@ -527,6 +550,28 @@
                         <input type="checkbox" id="speak-hog-hog">
                         Announce Hog-Hog time
                     </label>
+                    <button class="btn-secondary" id="btn-unlock-speech" type="button" onclick="unlockSpeech({ announce: true })">
+                        Activate audio (mobile)
+                    </button>
+                    <div class="setting-note">
+                        iPhone/iPad often require one tap before speech works. Tap this once after enabling voice.
+                    </div>
+                </div>
+            </div>
+
+            <div class="setting-group">
+                <label>
+                    <input type="checkbox" id="auto-rearm-enabled">
+                    Auto-arm if stuck measuring
+                </label>
+                <div class="setting-subgroup" id="auto-rearm-options">
+                    <label style="cursor: default;">
+                        After (minutes):
+                        <input type="number" id="auto-rearm-minutes" min="0" max="30" step="0.5" value="2" style="margin-left: auto; width: 90px; padding: 8px; border: 1px solid #e5e5e7; border-radius: 10px;">
+                    </label>
+                    <div class="setting-note">
+                        Starts counting from the first sensor trigger (ARMED → MEASURING). If the run never completes, RockTimer returns to ARMED automatically.
+                    </div>
                 </div>
             </div>
             
@@ -538,6 +583,105 @@
         let ws = null;
         let currentState = 'idle';
         let historyVisible = true;
+        let lastSeen = {
+            state: null,
+            tee_to_hog_close_ms: null,
+            hog_to_hog_ms: null
+        };
+
+        // Browser speech (phone headphones use-case)
+        let speechQueue = Promise.resolve();
+        function speechSupported() {
+            return typeof window !== 'undefined' && 'speechSynthesis' in window && typeof window.SpeechSynthesisUtterance === 'function';
+        }
+
+        function getPreferredVoice() {
+            if (!speechSupported()) return null;
+            const voices = window.speechSynthesis.getVoices ? window.speechSynthesis.getVoices() : [];
+            if (!voices || voices.length === 0) return null;
+            // Prefer English voices if available (en-US first)
+            const enUS = voices.find(v => (v.lang || '').toLowerCase().startsWith('en-us'));
+            const en = voices.find(v => (v.lang || '').toLowerCase().startsWith('en'));
+            return enUS || en || null;
+        }
+
+        function shouldSpeakEnabled() {
+            const el = document.getElementById('speech-enabled');
+            return !!(el && el.checked);
+        }
+
+        function say(text, { interrupt = false } = {}) {
+            if (!speechSupported()) return;
+            if (!shouldSpeakEnabled()) return;
+            if (!text || !String(text).trim()) return;
+
+            if (interrupt) {
+                try { window.speechSynthesis.cancel(); } catch (_) {}
+            }
+
+            speechQueue = speechQueue.then(() => new Promise(resolve => {
+                const utter = new SpeechSynthesisUtterance(String(text));
+                utter.lang = 'en-US';
+                const v = getPreferredVoice();
+                if (v) utter.voice = v;
+
+                let done = false;
+                const finish = () => {
+                    if (done) return;
+                    done = true;
+                    resolve();
+                };
+                utter.onend = finish;
+                utter.onerror = finish;
+
+                try {
+                    window.speechSynthesis.speak(utter);
+                } catch (_) {
+                    finish();
+                    return;
+                }
+
+                // Safety timeout (some browsers can get stuck)
+                setTimeout(finish, 12000);
+            }));
+        }
+
+        // On iOS Safari, speech often requires a user gesture. This tries to "unlock" audio.
+        function unlockSpeech({ announce = false } = {}) {
+            if (!speechSupported()) return;
+            if (!shouldSpeakEnabled()) return;
+
+            if (announce) {
+                say('Voice activated.', { interrupt: true });
+                return;
+            }
+
+            // Silent-ish warmup: speak a very short utterance at volume 0
+            try {
+                const warm = new SpeechSynthesisUtterance(' ');
+                warm.lang = 'en-US';
+                warm.volume = 0;
+                const v = getPreferredVoice();
+                if (v) warm.voice = v;
+                window.speechSynthesis.speak(warm);
+            } catch (_) {}
+        }
+
+        // Match base unit phrasing from server/main.py (_speak_time):
+        // "3.10" -> "3 point 10", "3.06" -> "3 point oh 6", "3.00" -> "3 point 00"
+        function formatSecondsLikeBase(seconds) {
+            const s = Number(seconds);
+            if (!Number.isFinite(s)) return null;
+            const formatted = s.toFixed(2); // "3.18"
+            const parts = formatted.split('.');
+            if (parts.length !== 2) return formatted;
+            const whole = parts[0];
+            const dec = parts[1]; // always 2 digits
+            let decSpoken = dec;
+            if (dec === '00') decSpoken = '00';
+            else if (dec.startsWith('0')) decSpoken = `oh ${dec[1]}`;
+            return `${whole} point ${decSpoken}`;
+        }
 
         function connectWebSocket() {
             const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
@@ -554,6 +698,7 @@
         }
 
         function updateState(data) {
+            const prevState = currentState;
             currentState = data.state;
             const session = data.session;
 
@@ -578,6 +723,47 @@
             }
 
             document.getElementById('btn-rearm').disabled = (currentState === 'measuring');
+
+            // --- Voice announcements (only on transitions / first-availability) ---
+            // Armed
+            const speechEnabled = shouldSpeakEnabled();
+            if (speechEnabled) {
+                // "armed" state transition
+                if (currentState === 'armed' && prevState !== 'armed') {
+                    const speakReady = document.getElementById('speak-ready')?.checked;
+                    if (speakReady) {
+                        say('ready to go', { interrupt: true });
+                    }
+                    // reset per-run announcements for the new session
+                    lastSeen.tee_to_hog_close_ms = null;
+                    lastSeen.hog_to_hog_ms = null;
+                }
+
+                // Tee-Hog (announce once when it first appears)
+                const teeMs = (session.tee_to_hog_close_ms != null && session.tee_to_hog_close_ms > 0) ? Number(session.tee_to_hog_close_ms) : null;
+                if ((lastSeen.tee_to_hog_close_ms == null || lastSeen.tee_to_hog_close_ms <= 0) && teeMs != null) {
+                    const speakTee = document.getElementById('speak-tee-hog')?.checked;
+                    if (speakTee) {
+                        const phrase = formatSecondsLikeBase(teeMs / 1000);
+                        if (phrase) say(phrase);
+                    }
+                }
+
+                // Hog-Hog (announce once when it first appears)
+                const hogMs = (session.hog_to_hog_ms != null && session.hog_to_hog_ms > 0) ? Number(session.hog_to_hog_ms) : null;
+                if ((lastSeen.hog_to_hog_ms == null || lastSeen.hog_to_hog_ms <= 0) && hogMs != null) {
+                    const speakHog = document.getElementById('speak-hog-hog')?.checked;
+                    if (speakHog) {
+                        const phrase = formatSecondsLikeBase(hogMs / 1000);
+                        if (phrase) say(phrase);
+                    }
+                }
+            }
+
+            // Track last-seen values to avoid repeating announcements on every state_update
+            lastSeen.state = currentState;
+            lastSeen.tee_to_hog_close_ms = session.tee_to_hog_close_ms;
+            lastSeen.hog_to_hog_ms = session.hog_to_hog_ms;
         }
 
         function loadHistory() {
@@ -729,7 +915,15 @@
                     document.getElementById('speak-ready').checked = data.speak_ready;
                     document.getElementById('speak-tee-hog').checked = data.speak_tee_hog;
                     document.getElementById('speak-hog-hog').checked = data.speak_hog_hog;
+                    document.getElementById('auto-rearm-enabled').checked = !!data.auto_rearm_enabled;
+                    const afterS = Number(data.auto_rearm_after_s);
+                    if (Number.isFinite(afterS) && afterS >= 0) {
+                        document.getElementById('auto-rearm-minutes').value = String(afterS / 60);
+                    } else {
+                        document.getElementById('auto-rearm-minutes').value = '2';
+                    }
                     updateSpeechOptions();
+                    updateAutoRearmOptions();
                 });
         }
 
@@ -739,16 +933,38 @@
             document.getElementById('speak-ready').disabled = !enabled;
             document.getElementById('speak-tee-hog').disabled = !enabled;
             document.getElementById('speak-hog-hog').disabled = !enabled;
+            const unlockBtn = document.getElementById('btn-unlock-speech');
+            if (unlockBtn) unlockBtn.disabled = !enabled;
         }
 
-        document.getElementById('speech-enabled').addEventListener('change', updateSpeechOptions);
+        document.getElementById('speech-enabled').addEventListener('change', () => {
+            updateSpeechOptions();
+            if (document.getElementById('speech-enabled').checked) {
+                // Often enough on desktop; on iOS user may still need "Activate audio" button.
+                unlockSpeech({ announce: false });
+            }
+        });
+
+        function updateAutoRearmOptions() {
+            const enabled = document.getElementById('auto-rearm-enabled').checked;
+            const group = document.getElementById('auto-rearm-options');
+            if (group) group.style.opacity = enabled ? '1' : '0.4';
+            const minutesEl = document.getElementById('auto-rearm-minutes');
+            if (minutesEl) minutesEl.disabled = !enabled;
+        }
+
+        document.getElementById('auto-rearm-enabled').addEventListener('change', updateAutoRearmOptions);
 
         async function saveSettings() {
+            const minutes = Number(document.getElementById('auto-rearm-minutes').value);
+            const afterS = Number.isFinite(minutes) ? Math.round(minutes * 60) : 120;
             const settings = {
                 speech_enabled: document.getElementById('speech-enabled').checked,
                 speak_ready: document.getElementById('speak-ready').checked,
                 speak_tee_hog: document.getElementById('speak-tee-hog').checked,
-                speak_hog_hog: document.getElementById('speak-hog-hog').checked
+                speak_hog_hog: document.getElementById('speak-hog-hog').checked,
+                auto_rearm_enabled: document.getElementById('auto-rearm-enabled').checked,
+                auto_rearm_after_s: Math.max(0, Math.min(afterS, 30 * 60))
             };
             await fetch('/api/settings', {
                 method: 'POST',
@@ -763,6 +979,12 @@
             connectWebSocket();
             loadHistory();
             loadSensors();
+            // Some browsers (notably Safari) populate voices asynchronously.
+            if (speechSupported()) {
+                try {
+                    window.speechSynthesis.onvoiceschanged = () => getPreferredVoice();
+                } catch (_) {}
+            }
         });
 
         setInterval(loadSensors, 2000);
