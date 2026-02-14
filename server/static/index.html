@@ -29,6 +29,27 @@
             flex-direction: column;
         }
 
+        /* Dark mode */
+        @media (prefers-color-scheme: dark) {
+            body { background: #0f1115; color: #f5f5f7; }
+            header h1 { color: #f5f5f7; }
+            .status-dot { background: #5c5c62; }
+            .sensor-dot { background: #2a2a2f; box-shadow: inset 0 0 0 2px rgba(255,255,255,0.08); }
+            .divider-line { background: #2a2a2f; }
+            .divider-handle { background: #1e2026; color: #c7c7cc; }
+            .btn-toggle { background: #1e2026; color: #c7c7cc; }
+            .btn-toggle:hover { color: #f5f5f7; }
+            .history-table th { color: #c7c7cc; border-bottom: 2px solid #2a2a2f; background: #000000; }
+            .history-table td { border-bottom: 1px solid #1e2026; }
+            .history-table .time-col { color: #c7c7cc; }
+            .empty-history { color: #c7c7cc; }
+            .modal { background: #141821; }
+            .setting-note { color: #a1a1aa; }
+            .btn-secondary { background: #1e2026; border-color: #2a2a2f; color: #f5f5f7; }
+            .time-card.tee-hog { background: linear-gradient(135deg, #3e56c7 0%, #2f44b8 100%); }
+            .time-card.hog-hog { background: linear-gradient(135deg, #7b3fc2 0%, #6423a7 100%); }
+        }
+
         .container {
             flex: 1;
             display: flex;
@@ -152,6 +173,82 @@
             min-height: 160px;
         }
 
+        /* Mobile layout tweaks */
+        @media (max-width: 600px) {
+            body {
+                padding: 8px;
+                background: #000000;
+                color: #f2f2f2;
+            }
+
+            header {
+                margin-bottom: 8px;
+            }
+
+            .main-row {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .time-cards {
+                width: 100%;
+            }
+
+            .time-card {
+                padding: 16px 10px;
+                min-height: 96px;
+            }
+
+            .time-label {
+                font-size: 0.9rem;
+            }
+
+            .time-value {
+                font-size: 3.6rem;
+            }
+
+            .main-row.expanded .time-value {
+                font-size: 4.4rem;
+            }
+
+            .main-row.expanded .time-label {
+                font-size: 1.05rem;
+            }
+
+            .main-row.expanded .time-card {
+                min-height: 120px;
+            }
+
+            .btn-rearm {
+                width: 100% !important;
+                min-width: 100% !important;
+                margin-top: 8px;
+                padding: 10px 12px;
+                flex-direction: row;
+                gap: 8px;
+                font-size: 0.75rem;
+                align-self: stretch;
+            }
+
+            .btn-rearm svg {
+                width: 20px;
+                height: 20px;
+            }
+
+            .status-dot { background: #4b4b52; }
+            .sensor-dot { background: #1c1c1f; box-shadow: inset 0 0 0 2px rgba(255,255,255,0.12); }
+            .divider-line { background: #1c1c1f; }
+            .divider-handle { background: #121215; color: #cfcfd6; }
+            .btn-toggle { background: #121215; color: #cfcfd6; }
+            .btn-toggle:hover { color: #f2f2f2; }
+            .history-table th { color: #cfcfd6; border-bottom: 2px solid #1c1c1f; background: #000000; }
+            .history-table td { border-bottom: 1px solid #121215; }
+            .history-table .time-col { color: #cfcfd6; }
+            .empty-history { color: #cfcfd6; }
+            .time-card.tee-hog { background: linear-gradient(135deg, #405ee0 0%, #2e44b8 100%); }
+            .time-card.hog-hog { background: linear-gradient(135deg, #8a4ae6 0%, #6b28cf 100%); }
+        }
+
         /* Rearm button */
         .btn-rearm {
             width: 80px;
@@ -175,6 +272,15 @@
         .btn-rearm:active { transform: scale(0.96); }
         .btn-rearm:disabled { opacity: 0.5; cursor: not-allowed; }
         .btn-rearm svg { width: 24px; height: 24px; }
+
+        /* Mobile: make Rearm full width under cards */
+        @media (max-width: 600px) {
+            .btn-rearm {
+                width: 100%;
+                min-width: 0;
+                align-self: stretch;
+            }
+        }
 
         /* Resizable divider */
         .divider {
@@ -321,6 +427,18 @@
             padding: 20px;
             color: #86868b;
             font-size: 1rem;
+        }
+
+        /* Mobile history colors (override base header background) */
+        @media (max-width: 600px) {
+            .history-table th {
+                color: #cfcfd6;
+                border-bottom: 2px solid #1c1c1f;
+                background: #000000;
+            }
+            .history-table td { border-bottom: 1px solid #121215; }
+            .history-table .time-col { color: #cfcfd6; }
+            .empty-history { color: #cfcfd6; }
         }
 
         /* Settings button */
