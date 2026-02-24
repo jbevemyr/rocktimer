@@ -519,7 +519,7 @@ Environment=NO_AT_BRIDGE=1
 ExecStartPre=/bin/sh -c "i=0; while [ \$i -lt 200 ]; do test -S /tmp/.X11-unix/X0 && exit 0; i=\$((i+1)); sleep 0.05; done; exit 1"
 
 # Avoid keyring prompts / password store on kiosk
-ExecStart=/usr/bin/chromium --kiosk --noerrdialogs --disable-infobars --no-first-run --start-fullscreen --disable-background-networking --disable-sync --disable-features=TranslateUI --password-store=basic --use-mock-keychain file://${INSTALL_DIR}/kiosk_loading.html
+ExecStart=/usr/bin/chromium --kiosk --noerrdialogs --disable-infobars --no-first-run --start-fullscreen --disable-background-networking --disable-sync --disable-features=TranslateUI --password-store=basic --use-mock-keychain --disk-cache-size=1 --disable-application-cache file://${INSTALL_DIR}/kiosk_loading.html
 Restart=always
 RestartSec=2
 
