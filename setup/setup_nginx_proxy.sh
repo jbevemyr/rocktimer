@@ -39,10 +39,16 @@ server {
     location = /generate_204 { return 204; }
     location = /gen_204 { return 204; }
 
-    # - iOS: hotspot-detect expects "Success"
+    # - iOS: hotspot-detect expects exact HTML with "Success"
     location = /hotspot-detect.html {
         default_type text/html;
-        return 200 "Success";
+        return 200 '<HTML><HEAD><TITLE>Success</TITLE></HEAD><BODY>Success</BODY></HTML>';
+    }
+
+    # - iOS 14+: library.captive.apple.com
+    location = /success.html {
+        default_type text/html;
+        return 200 '<HTML><HEAD><TITLE>Success</TITLE></HEAD><BODY>Success</BODY></HTML>';
     }
 
     # - Microsoft: expected small text files
