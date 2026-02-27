@@ -1,14 +1,14 @@
 //
-//  RockTimerApp.swift
-//  RockTimer WatchKit Extension
+//  SplitStoneApp.swift
+//  SplitStone WatchKit Extension
 //
-//  Main application for RockTimer Apple Watch
+//  Main application for SplitStone Apple Watch
 //
 
 import SwiftUI
 
 @main
-struct RockTimerApp: App {
+struct SplitStoneApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()

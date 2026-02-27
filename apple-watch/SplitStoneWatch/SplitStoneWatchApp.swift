@@ -1,15 +1,15 @@
 import SwiftUI
 
 @main
-struct RockTimerWatchApp: App {
-    @StateObject private var state = RockTimerState()
-    @StateObject private var client: RockTimerClient
+struct SplitStoneWatchApp: App {
+    @StateObject private var state = SplitStoneState()
+    @StateObject private var client: SplitStoneClient
 
     init() {
-        let s = RockTimerState()
+        let s = SplitStoneState()
         _state = StateObject(wrappedValue: s)
         // watchOS uses polling since WebSocket support is limited
-        _client = StateObject(wrappedValue: RockTimerClient(state: s, usePolling: true))
+        _client = StateObject(wrappedValue: SplitStoneClient(state: s, usePolling: true))
     }
 
     var body: some Scene {

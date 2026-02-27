@@ -1,7 +1,7 @@
 import SwiftUI
 
 @main
-struct RockTimerIOSApp: App {
+struct SplitStoneIOSApp: App {
     var body: some Scene {
         WindowGroup {
             RootView()
@@ -10,13 +10,13 @@ struct RockTimerIOSApp: App {
 }
 
 struct RootView: View {
-    @StateObject private var state = RockTimerState()
-    @StateObject private var client: RockTimerClient
+    @StateObject private var state = SplitStoneState()
+    @StateObject private var client: SplitStoneClient
 
     init() {
-        let s = RockTimerState()
+        let s = SplitStoneState()
         _state = StateObject(wrappedValue: s)
-        _client = StateObject(wrappedValue: RockTimerClient(state: s))
+        _client = StateObject(wrappedValue: SplitStoneClient(state: s))
     }
 
     var body: some View {

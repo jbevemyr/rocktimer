@@ -1,10 +1,10 @@
 #!/bin/bash
-# Optional: configure Nginx to serve RockTimer on port 80 and proxy to :8080
+# Optional: configure Nginx to serve SplitStone on port 80 and proxy to :8080
 #
 # This makes it possible to use:
-#   http://rocktimer
+#   http://splitstone
 # instead of:
-#   http://rocktimer:8080
+#   http://splitstone:8080
 
 set -e
 
@@ -14,7 +14,7 @@ if [ "$EUID" -ne 0 ]; then
 fi
 
 echo "==================================="
-echo "RockTimer Nginx Proxy Setup"
+echo "SplitStone Nginx Proxy Setup"
 echo "==================================="
 
 echo "[1/3] Installing nginx..."
@@ -22,7 +22,7 @@ apt-get update
 apt-get install -y nginx
 
 echo "[2/3] Writing site config..."
-cat > /etc/nginx/sites-available/rocktimer << 'EOF'
+cat > /etc/nginx/sites-available/splitstone << 'EOF'
 map $http_upgrade $connection_upgrade {
     default upgrade;
     ''      close;
@@ -76,7 +76,7 @@ server {
 EOF
 
 rm -f /etc/nginx/sites-enabled/default || true
-ln -sf /etc/nginx/sites-available/rocktimer /etc/nginx/sites-enabled/rocktimer
+ln -sf /etc/nginx/sites-available/splitstone /etc/nginx/sites-enabled/splitstone
 
 echo "[3/3] Restarting nginx..."
 nginx -t
@@ -86,8 +86,8 @@ systemctl restart nginx
 echo ""
 echo "Done."
 echo "You can now use:"
-echo "  http://rocktimer"
-echo "  http://rocktimer.local"
+echo "  http://splitstone"
+echo "  http://splitstone.local"
 echo "  http://192.168.50.1"
 
 

@@ -1,21 +1,21 @@
-// RockTimerClient – handles REST polling and WebSocket updates
+// SplitStoneClient – handles REST polling and WebSocket updates
 // Used by both iOS and watchOS targets.
 
 import Foundation
 
 @MainActor
-public final class RockTimerClient: ObservableObject {
+public final class SplitStoneClient: ObservableObject {
 
     // MARK: - Configuration
 
-    /// Base URL to the RockTimer server. Change to match your Pi's address/port.
+    /// Base URL to the SplitStone server. Change to match your Pi's address/port.
     public var serverBase: String {
         get { _serverBase }
         set { _serverBase = newValue; reconnectWebSocket() }
     }
 
     private var _serverBase: String
-    private let state: RockTimerState
+    private let state: SplitStoneState
 
     // MARK: - WebSocket
 
@@ -29,7 +29,7 @@ public final class RockTimerClient: ObservableObject {
 
     // MARK: - Init
 
-    public init(state: RockTimerState, serverBase: String = "http://192.168.50.1:8080", usePolling: Bool = false) {
+    public init(state: SplitStoneState, serverBase: String = "http://192.168.50.1:8080", usePolling: Bool = false) {
         self.state = state
         self._serverBase = serverBase
         self.usePollFallback = usePolling

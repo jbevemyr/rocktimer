@@ -1,8 +1,8 @@
 //
 //  TimerViewModel.swift
-//  RockTimer WatchKit Extension
+//  SplitStone WatchKit Extension
 //
-//  ViewModel to handle communication with the RockTimer server
+//  ViewModel to handle communication with the SplitStone server
 //
 
 import Foundation

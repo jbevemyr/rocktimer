@@ -1,6 +1,6 @@
 //
 //  ContentView.swift
-//  RockTimer WatchKit Extension
+//  SplitStone WatchKit Extension
 //
 //  Curling timing - Apple Watch app
 //
