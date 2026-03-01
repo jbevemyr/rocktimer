@@ -318,7 +318,7 @@ rocktimer/
 ├── tools/
 │   ├── simulate_triggers.py # UDP trigger simulator
 │   └── test_sensor.py       # GPIO sensor test
-├── apple-watch/             # Optional Apple Watch companion
+├── RockTimer/               # iOS + Apple Watch companion (Xcode)
 ├── install_server.sh        # Pi 4 installer
 ├── install_sensor.sh        # Pi Zero installer
 ├── config.yaml.example      # Configuration template
@@ -466,7 +466,7 @@ makestep 1.0 3
 
 Replace touchscreen with:
 - **Phone/tablet:** Connect to rocktimer Wi-Fi, open browser
-- **Apple Watch:** Use companion app (see `apple-watch/`)
+- **Apple Watch:** Use companion app (see `RockTimer/`)
 
 ## Testing
 

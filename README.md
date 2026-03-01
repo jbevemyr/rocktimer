@@ -170,7 +170,7 @@ This lets you view live times from your phone and press **Rearm** without using 
 The touchscreen is optional. You can build RockTimer without a display and rely on:
 
 - A **phone/tablet** connected to the RockTimer Wi‑Fi network
-- An **Apple Watch** companion (future / external app integration)
+- An **Apple Watch / iOS** companion app (see `RockTimer/`)
 - Any **laptop/desktop** on the same Wi‑Fi network using a web browser
 
 ### Local hostname: http://rocktimer
@@ -227,10 +227,9 @@ sudo ./setup/setup_splash.sh "RockTimer" "jb@bevemyr.com"
 
 This uses Plymouth and generates a simple image-based splash (curling stone + text). If you use a different display resolution than the Pi 7" touchscreen, re-run the script after switching displays so it can regenerate the image at the detected resolution.
 
-### Apple Watch (future)
+### Apple Watch & iOS
 
-The idea is to extend the Apple Watch app **“Curling Timer”** so it can display RockTimer times (and optionally arm/rearm).
-The repository also contains a simple Apple Watch companion app under `apple-watch/` that can be used as a starting point.
+The repository also contains an iOS and Apple Watch companion app under `RockTimer/` (Xcode project). It displays RockTimer times and supports arm/rearm from phone or watch.
 
 ## Time sync (Chrony)
 

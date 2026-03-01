@@ -287,7 +287,7 @@ This sends fake triggers in sequence. Check the web UI - it should show times.
 - **Voice announcements:** Enable in Settings (⚙️ icon in web UI)
   - Wire speaker to Pi 4 (see audio diagram in README)
 - **Customize:** Edit `/opt/rocktimer/config.yaml`
-- **Apple Watch:** Build companion app from `apple-watch/` directory
+- **Apple Watch / iOS:** Build companion app from `RockTimer/` directory (Xcode)
 - **Enclosures:** 3D print cases to protect Pi units on ice
 
 ## Support
