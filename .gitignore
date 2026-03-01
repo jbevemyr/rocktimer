@@ -33,3 +33,8 @@ config.yaml
 dist/
 build/
 
+# Xcode
+xcuserdata/
+*.xcuserstate
+*.xcworkspace/xcuserdata/
+
