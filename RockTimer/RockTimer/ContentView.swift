@@ -106,21 +106,17 @@ struct LandscapeView: View {
 
 struct HeaderBar: View {
     @EnvironmentObject var state: RockTimerState
-    
+    @State private var showingSettings = false
+
     var body: some View {
         HStack(alignment: .center) {
             // Left: logo + 2-line title
             HStack(spacing: 10) {
-                Button {
-                    //showingInfo = true
-                } label: {
-                    Image("Logo")
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 44, height: 44)
-                }
-                .buttonStyle(.plain)
-                
+                Image("Logo")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 44, height: 44)
+
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Stone")
                         .font(.custom("Poppins-Black", size: 20))
@@ -128,15 +124,28 @@ struct HeaderBar: View {
                         .font(.custom("Poppins-Black", size: 20))
                 }
             }
-            
+
             Spacer()
-            
+
             SensorDots()
-            
+
             StatusDot(state: state.systemState)
+
+            Button {
+                showingSettings = true
+            } label: {
+                Image(systemName: "gearshape")
+                    .font(.system(size: 18))
+                    .foregroundStyle(.secondary)
+            }
+            .buttonStyle(.plain)
+            .padding(.leading, 8)
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 10)
+        .sheet(isPresented: $showingSettings) {
+            SettingsView()
+        }
     }
 }
 

@@ -78,6 +78,33 @@ public struct TimesRecord: Codable, Sendable, Identifiable {
     }
 }
 
+// MARK: - Server Settings
+
+public struct ServerSettings: Codable, Sendable {
+    public var speech_enabled: Bool
+    public var speak_ready: Bool
+    public var speak_tee_hog: Bool
+    public var speak_hog_hog: Bool
+    public var auto_rearm_enabled: Bool
+    public var auto_rearm_after_s: Double
+
+    public static var defaultSettings: ServerSettings {
+        ServerSettings(
+            speech_enabled: false,
+            speak_ready: false,
+            speak_tee_hog: false,
+            speak_hog_hog: false,
+            auto_rearm_enabled: false,
+            auto_rearm_after_s: 120
+        )
+    }
+
+    public var autoRearmMinutes: Double {
+        get { auto_rearm_after_s / 60 }
+        set { auto_rearm_after_s = newValue * 60 }
+    }
+}
+
 // MARK: - Timer State (shared observable)
 
 @MainActor
@@ -88,6 +115,7 @@ public final class RockTimerState: ObservableObject {
     @Published public var isConnected: Bool = false
     @Published public var sensors: [SensorInfo] = []
     @Published public var history: [TimesRecord] = []
+    @Published public var settings: ServerSettings = .defaultSettings
 
     public var teeHogFormatted: String {
         guard let ms = teeToHogMs, ms > 0 else { return "--" }

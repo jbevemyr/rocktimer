@@ -164,6 +164,26 @@ public final class RockTimerClient: ObservableObject {
         } catch {}
     }
 
+    public func fetchSettings() async {
+        guard let url = URL(string: "\(_serverBase)/api/settings") else { return }
+        do {
+            let (data, _) = try await URLSession.shared.data(for: request(url))
+            let settings = try JSONDecoder().decode(ServerSettings.self, from: data)
+            state.settings = settings
+        } catch {}
+    }
+
+    public func saveSettings(_ settings: ServerSettings) async {
+        guard let url = URL(string: "\(_serverBase)/api/settings") else { return }
+        var req = URLRequest(url: url)
+        req.httpMethod = "POST"
+        req.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        req.timeoutInterval = 5
+        req.httpBody = try? JSONEncoder().encode(settings)
+        _ = try? await URLSession.shared.data(for: req)
+        await fetchSettings()
+    }
+
     public func clearHistory() async {
         guard let url = URL(string: "\(_serverBase)/api/clear") else { return }
         var req = URLRequest(url: url)
