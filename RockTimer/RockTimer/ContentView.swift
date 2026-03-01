@@ -322,12 +322,23 @@ struct HistoryView: View {
 
     private func formattedTime(_ iso: String?) -> String {
         guard let iso else { return "--" }
-        let df = ISO8601DateFormatter()
-        df.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-        guard let date = df.date(from: iso) else { return "--" }
-        let f = DateFormatter()
-        f.dateFormat = "HH:mm:ss"
-        return f.string(from: date)
+
+        // Try several formats since the server omits timezone
+        let formatStrings = [
+            "yyyy-MM-dd'T'HH:mm:ss.SSSSSS",
+            "yyyy-MM-dd'T'HH:mm:ss.SSS",
+            "yyyy-MM-dd'T'HH:mm:ss",
+        ]
+        let df = DateFormatter()
+        df.locale = Locale(identifier: "en_US_POSIX")
+        for fmt in formatStrings {
+            df.dateFormat = fmt
+            if let date = df.date(from: iso) {
+                df.dateFormat = "HH:mm:ss"
+                return df.string(from: date)
+            }
+        }
+        return "--"
     }
 }
 
