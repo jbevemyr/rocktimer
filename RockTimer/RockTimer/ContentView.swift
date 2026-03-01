@@ -22,7 +22,6 @@ struct ContentView: View {
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            //.background(Color.black.ignoresSafeArea())
             .background(Color.primaryBackground)
         }
     }
@@ -116,35 +115,35 @@ struct HeaderBar: View {
                     .resizable()
                     .scaledToFit()
                     .frame(width: 44, height: 44)
-
+                
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("Rock")
+                    Text("Stone")
                         .font(.custom("Poppins-Black", size: 20))
                     Text("Timer")
                         .font(.custom("Poppins-Black", size: 20))
                 }
             }
-
+            
             Spacer()
-
-            SensorDots()
-
-            StatusDot(state: state.systemState)
-
-            Button {
-                showingSettings = true
-            } label: {
-                Image(systemName: "gearshape")
-                    .font(.system(size: 18))
-                    .foregroundStyle(.secondary)
+            
+            VStack(spacing: 8) {
+                Button {
+                    showingSettings = true
+                } label: {
+                    Image(systemName: "gearshape")
+                        .font(.system(size: 18))
+                        .foregroundStyle(.secondary)
+                }
+                .buttonStyle(.plain)
+                
+                SensorDots()
+                StatusDot(state: state.systemState)
             }
-            .buttonStyle(.plain)
-            .padding(.leading, 8)
-        }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 10)
-        .sheet(isPresented: $showingSettings) {
-            SettingsView()
+            .padding(.horizontal, 16)
+            .padding(.vertical, 10)
+            .sheet(isPresented: $showingSettings) {
+                SettingsView()
+            }
         }
     }
 }
@@ -315,8 +314,8 @@ struct HistoryView: View {
                 List(state.history) { record in
                     HStack {
                         Text(formattedTime(record.timestamp))
-                            .font(.caption)
-                            .foregroundColor(.gray)
+                            .font(.system(.body, design: .monospaced))
+                            .foregroundColor(Color.text)
                             .lineLimit(1)
                             .fixedSize(horizontal: true, vertical: false)
                         Spacer()
@@ -330,7 +329,7 @@ struct HistoryView: View {
                             .fontWeight(.bold)
                             .foregroundColor(Color.hog)
                     }
-                    .listRowBackground(Color.primary)
+                    .listRowBackground(Color.primaryBackground)
                 }
                 .listStyle(.plain)
                 .scrollContentBackground(.hidden)

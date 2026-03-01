@@ -38,7 +38,9 @@ struct WatchTimesView: View {
                 Text(state.isConnected ? "Connected" : "Offline")
                     .font(.system(size: 10))
                     .foregroundColor(.secondary)
+                Spacer()
             }
+            Spacer()
             //WatchStatusBadge(state: state.systemState)
 
             HStack(spacing: 8) {
@@ -110,18 +112,19 @@ struct WatchTimeBlock: View {
     let color: Color
 
     var body: some View {
-        VStack(spacing: 20) {
+        VStack(spacing: 12) {
             Text(label)
                 .font(.system(size: 10, weight: .medium))
                 .foregroundColor(Color.boxText)
             Text(value)
-                .font(.system(size: 18, weight: .bold, design: .monospaced))
+                .font(.system(size: 24, weight: .bold, design: .monospaced))
                 .foregroundColor(Color.boxText)
                 .minimumScaleFactor(0.6)
                 .lineLimit(1)
         }
         .frame(maxWidth: .infinity)
-        .padding(16)
+        .padding(.vertical, 10)
+        .padding(.horizontal, 3)
         //.background(color)
         .background(
             RoundedRectangle(cornerRadius: 14)

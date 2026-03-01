@@ -68,19 +68,19 @@ public struct TimesRecord: Codable, Sendable, Identifiable {
     public let total_ms: Double?
 
     public var teeHogFormatted: String {
-        guard let ms = tee_to_hog_close_ms, ms > 0 else { return "--" }
+        guard let ms = tee_to_hog_close_ms, ms > 0 else { return "--.--" }
         return String(format: "%.2f", ms / 1000)
     }
 
     public var hogHogFormatted: String {
-        guard let ms = hog_to_hog_ms, ms > 0 else { return "--" }
+        guard let ms = hog_to_hog_ms, ms > 0 else { return "--.--" }
         return String(format: "%.2f", ms / 1000)
     }
 }
 
 // MARK: - Server Settings
 
-public struct ServerSettings: Codable, Sendable {
+public struct ServerSettings: Codable, Sendable, Equatable {
     public var speech_enabled: Bool
     public var speak_ready: Bool
     public var speak_tee_hog: Bool

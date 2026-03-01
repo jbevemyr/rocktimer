@@ -45,7 +45,7 @@ struct SettingsView: View {
 
                     if draft.speech_enabled {
                         Toggle(isOn: $draft.speak_ready) {
-                            Text("Say "ready to go" when armed")
+                            Text("Say ready to go when armed")
                         }
                         .padding(.leading, 8)
 
