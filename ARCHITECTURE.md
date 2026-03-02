@@ -1,6 +1,6 @@
-# RockTimer System Architecture
+# Stone Timer System Architecture
 
-This document describes the technical architecture of RockTimer.
+This document describes the technical architecture of Stone Timer.
 
 ## System Overview
 

@@ -1,6 +1,6 @@
-# RockTimer - Curling Timing System
+# Stone Timer - Curling Timing System
 
-RockTimer is a DIY curling stone timing system that measures split times between the **tee line**, the **near hog line**, and the **far hog line** using simple laser trip sensors.
+Stone Timer is a DIY curling stone timing system that measures split times between the **tee line**, the **near hog line**, and the **far hog line** using simple laser trip sensors.
 
 **Perfect for:** Practice sessions, coaching, analyzing stone speed and release consistency
 
@@ -36,7 +36,7 @@ It is designed for a **3‑Pi setup**:
 
 ## Documentation
 
-- **[QUICKSTART.md](QUICKSTART.md)** - Step-by-step guide to build your first RockTimer (recommended for beginners)
+- **[QUICKSTART.md](QUICKSTART.md)** - Step-by-step guide to build your first Stone Timer (recommended for beginners)
 - **[ARCHITECTURE.md](ARCHITECTURE.md)** - Technical deep-dive: system design, protocols, data flow
 - **README.md** (this file) - Complete reference guide
 
@@ -61,7 +61,7 @@ Below are the “from zero” steps for a brand new Raspberry Pi OS installation
 
 **Prerequisites**
 - Raspberry Pi OS installed (Bookworm/Bullseye), SSH enabled
-- (Recommended) Pi 4 acts as the RockTimer **Wi‑Fi AP**
+- (Recommended) Pi 4 acts as the Stone Timer **Wi‑Fi AP**
 
 **1) Clone and install**
 
@@ -75,7 +75,7 @@ cd rocktimer
 sudo ./install_server.sh
 ```
 
-**2) (Recommended) Set up RockTimer Wi‑Fi (AP)**
+**2) (Recommended) Set up Stone Timer Wi‑Fi (AP)**
 
 ```bash
 sudo ./setup/setup_network.sh
@@ -141,7 +141,7 @@ sudo ROCKTIMER_CONFIGURE_CHRONY=1 ROCKTIMER_CHRONY_SERVER=192.168.50.1 ./install
 
 ## Network (Pi 4 as Wi‑Fi Access Point)
 
-RockTimer is designed to run on a **local Wi‑Fi network** created by the Pi 4:
+Stone Timer is designed to run on a **local Wi‑Fi network** created by the Pi 4:
 
 - **Pi 4**: runs the server + acts as a **Wi‑Fi Access Point** (AP), typically `192.168.50.1`
 - **Pi Zero 2 W** units: connect to the Pi 4 Wi‑Fi and send UDP triggers to the server
@@ -159,7 +159,7 @@ After running it:
 
 ### Viewing times from a phone
 
-If you have a phone/tablet, you can join the RockTimer Wi‑Fi network and open:
+If you have a phone/tablet, you can join the Stone Timer Wi‑Fi network and open:
 
 - `http://192.168.50.1` (or `http://192.168.50.1:8080`)
 
@@ -167,9 +167,9 @@ This lets you view live times from your phone and press **Rearm** without using 
 
 ### No touchscreen required
 
-The touchscreen is optional. You can build RockTimer without a display and rely on:
+The touchscreen is optional. You can build Stone Timer without a display and rely on:
 
-- A **phone/tablet** connected to the RockTimer Wi‑Fi network
+- A **phone/tablet** connected to the Stone Timer Wi‑Fi network
 - An **Apple Watch / iOS** companion app (see `RockTimer/`)
 - Any **laptop/desktop** on the same Wi‑Fi network using a web browser
 
@@ -181,7 +181,7 @@ If you use the provided Wi‑Fi AP setup, dnsmasq can be configured to resolve:
 
 So you can type `http://rocktimer` in your browser.
 
-Note: RockTimer itself runs on **port 8080** by default. If you want plain port **80**,
+Note: Stone Timer itself runs on **port 8080** by default. If you want plain port **80**,
 use the optional Nginx reverse proxy setup:
 
 ```bash
@@ -190,10 +190,10 @@ sudo ./setup/setup_nginx_proxy.sh
 
 ### Phones complaining about "No Internet" (optional)
 
-If the Pi 4 Wi‑Fi network has no upstream internet (common for RockTimer), phones may show a warning like
+If the Pi 4 Wi‑Fi network has no upstream internet (common for Stone Timer), phones may show a warning like
 “No internet” and sometimes try to switch away from Wi‑Fi.
 
-RockTimer can reduce this annoyance by answering common captive-portal / connectivity checks locally:
+Stone Timer can reduce this annoyance by answering common captive-portal / connectivity checks locally:
 
 - `setup/setup_network.sh` adds dnsmasq rules that map those check domains to the Pi 4 IP
 - `setup/setup_nginx_proxy.sh` (port 80) returns the expected small responses (204/Success/text)
@@ -210,7 +210,7 @@ sudo reboot
 
 If you want a simple boot splash during OS startup that shows:
 
-- **RockTimer**
+- Stone Timer
 - **jb@bevemyr.com**
 
 …you can enable a custom Plymouth theme:
@@ -222,7 +222,7 @@ sudo ./setup/setup_splash.sh
 You can also override the text:
 
 ```bash
-sudo ./setup/setup_splash.sh "RockTimer" "jb@bevemyr.com"
+sudo ./setup/setup_splash.sh "Stone Timer" "jb@bevemyr.com"
 ```
 
 This uses Plymouth and generates a simple image-based splash (curling stone + text). If you use a different display resolution than the Pi 7" touchscreen, re-run the script after switching displays so it can regenerate the image at the detected resolution.
@@ -238,7 +238,7 @@ Use **chrony** with the Pi 4 as the local time server.
 
 ### Quick setup via install scripts (recommended)
 
-Both install scripts can optionally configure chrony for you (idempotent: re-running updates the RockTimer block).
+Both install scripts can optionally configure chrony for you (idempotent: re-running updates the Stone Timer block).
 
 - **Pi 4 (server)**:
 
@@ -288,7 +288,7 @@ sudo apt-get install -y chrony
 Edit `/etc/chrony/chrony.conf` on the Pi 4 and add something like:
 
 ```conf
-# Allow LAN clients (RockTimer Wi‑Fi network)
+# Allow LAN clients (Stone Timer Wi‑Fi network)
 allow 192.168.50.0/24
 
 # Optional: keep stable even without internet
@@ -348,7 +348,7 @@ sudo ./install_sensor.sh
 
 ## Updating / Upgrading
 
-RockTimer is installed to **`/opt/rocktimer`** and runs via systemd services. You can safely re-run the installers to apply updates.
+Stone Timer is installed to **`/opt/rocktimer`** and runs via systemd services. You can safely re-run the installers to apply updates.
 
 ### Recommended update flow (Pi 4 + Pi Zero)
 
@@ -401,11 +401,11 @@ server:
 
 ## Hardware
 
-If you want to build your own RockTimer setup, this is the hardware used in this project.
+If you want to build your own Stone Timer setup, this is the hardware used in this project.
 
 ### Bill of Materials (BOM)
 
-**Complete shopping list for one RockTimer system:**
+**Complete shopping list for one Stone Timer system:**
 
 #### Compute Units
 - 1× Raspberry Pi 4 Model B (4GB or 8GB recommended)
@@ -567,7 +567,7 @@ python tools/simulate_triggers.py --server 127.0.0.1 --simulate
 The system can announce times using text-to-speech. Use a small amplifier module (e.g. HW-104/PAM8403)
 and a 3W speaker for an enclosure build.
 
-RockTimer uses **Piper (Coqui TTS)** for speech. The server calls `/opt/piper/speak.sh`, which pipes Piper audio to `/usr/bin/aplay`.
+Stone Timer uses **Piper (Coqui TTS)** for speech. The server calls `/opt/piper/speak.sh`, which pipes Piper audio to `/usr/bin/aplay`.
 
 #### Faster callouts (optional)
 

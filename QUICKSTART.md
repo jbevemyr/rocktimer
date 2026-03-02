@@ -1,6 +1,6 @@
-# RockTimer Quick Start Guide
+# Stone Timer Quick Start Guide
 
-This guide will get you from zero to a working RockTimer system in ~3 hours.
+This guide will get you from zero to a working Stone Timer system in ~3 hours.
 
 ## Prerequisites
 
@@ -184,7 +184,7 @@ systemctl status rocktimer-sensor --no-pager
 On your phone/laptop, connect to "rocktimer" Wi-Fi and open:
 - http://192.168.50.1:8080
 
-You should see the RockTimer interface with two time cards.
+You should see the Stone Timer interface with two time cards.
 
 #### Sensor status indicators (Pi 4 UI)
 

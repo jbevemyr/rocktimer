@@ -1,6 +1,6 @@
-# Contributing to RockTimer
+# Contributing to Stone Timer
 
-Thank you for your interest in contributing to RockTimer! This document provides guidelines for contributing to the project.
+Thank you for your interest in contributing to Stone Timer! This document provides guidelines for contributing to the project.
 
 ## Code of Conduct
 
@@ -418,5 +418,5 @@ Open an issue or reach out to the maintainers.
 
 ---
 
-**Thank you for contributing to RockTimer!** 🥌
+**Thank you for contributing to Stone Timer!** 🥌
 
