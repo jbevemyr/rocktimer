@@ -849,6 +849,14 @@ async def favicon():
     return Response(content=svg, media_type="image/svg+xml")
 
 
+@app.get("/calibrate", response_class=HTMLResponse)
+async def calibrate():
+    cal_path = static_path / "calibrate.html"
+    if cal_path.exists():
+        return FileResponse(cal_path)
+    return HTMLResponse("<h1>Calibration page not found</h1>")
+
+
 @app.get("/", response_class=HTMLResponse)
 async def root():
     index_path = static_path / "index.html"

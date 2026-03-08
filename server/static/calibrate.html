@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en" translate="no">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="google" content="notranslate">
+    <title>Stone Timer — Camera Calibration</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #000; color: #f2f2f2;
+            padding: 16px;
+        }
+        header {
+            display: flex; align-items: center; gap: 12px;
+            margin-bottom: 16px;
+        }
+        header a {
+            color: #cfcfd6; text-decoration: none; font-size: 0.9rem;
+        }
+        header a:hover { color: #f2f2f2; }
+        h1 { font-size: 1.2rem; font-weight: 700; }
+        .sensors { display: flex; flex-wrap: wrap; gap: 16px; }
+        .sensor-card {
+            flex: 1; min-width: 300px; max-width: 500px;
+            background: #121215; border-radius: 14px;
+            padding: 16px; display: flex; flex-direction: column; gap: 12px;
+        }
+        .sensor-header {
+            display: flex; align-items: center; gap: 8px;
+        }
+        .sensor-name { font-weight: 600; font-size: 1rem; }
+        .sensor-status {
+            font-size: 0.8rem; padding: 2px 8px; border-radius: 6px;
+            font-weight: 500;
+        }
+        .sensor-status.online { background: #1b3a1b; color: #34c759; }
+        .sensor-status.offline { background: #3a1b1b; color: #ff3b30; }
+        .sensor-status.no-camera { background: #2a2a2e; color: #86868b; }
+        .stream-container {
+            position: relative; background: #0a0a0c; border-radius: 10px;
+            overflow: hidden; aspect-ratio: 4/3;
+        }
+        .stream-container img {
+            width: 100%; height: 100%; object-fit: contain;
+            display: block;
+        }
+        .stream-placeholder {
+            display: flex; align-items: center; justify-content: center;
+            width: 100%; height: 100%; color: #86868b; font-size: 0.9rem;
+            position: absolute; top: 0; left: 0;
+        }
+        .stream-toggle {
+            position: absolute; top: 8px; right: 8px;
+            background: rgba(0,0,0,0.6); border: none; border-radius: 6px;
+            color: #f2f2f2; font-family: inherit; font-size: 0.75rem;
+            padding: 4px 8px; cursor: pointer;
+        }
+        .stream-toggle:hover { background: rgba(0,0,0,0.8); }
+        .controls { display: flex; flex-direction: column; gap: 8px; }
+        .control-row {
+            display: flex; align-items: center; gap: 8px;
+        }
+        .control-row label {
+            font-size: 0.85rem; color: #cfcfd6; min-width: 100px;
+        }
+        .control-row input[type="number"] {
+            width: 70px; padding: 6px 8px; border: 1px solid #2a2a2e;
+            border-radius: 8px; background: #1c1c1f; color: #f2f2f2;
+            font-family: inherit; font-size: 0.85rem;
+        }
+        .roi-inputs { display: flex; gap: 6px; }
+        .roi-inputs input { width: 55px; }
+        .btn {
+            padding: 8px 16px; border: none; border-radius: 8px;
+            font-family: inherit; font-size: 0.85rem; font-weight: 600;
+            cursor: pointer; transition: transform 0.1s;
+        }
+        .btn:active { transform: scale(0.96); }
+        .btn-save {
+            background: linear-gradient(135deg, #22c1c3 0%, #2ecc71 100%);
+            color: black;
+        }
+        .btn-row { display: flex; gap: 8px; margin-top: 4px; }
+        .save-status {
+            font-size: 0.8rem; color: #34c759; opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .save-status.visible { opacity: 1; }
+    </style>
+</head>
+<body>
+    <header>
+        <a href="/">← Back</a>
+        <h1>Camera Calibration</h1>
+    </header>
+    <div class="sensors" id="sensors"></div>
+
+    <script>
+        const CAMERA_HTTP_PORT = 8081;
+
+        async function loadSensors() {
+            let data;
+            try {
+                const resp = await fetch('/api/sensors');
+                data = await resp.json();
+            } catch (e) {
+                document.getElementById('sensors').innerHTML =
+                    '<p style="color:#ff3b30">Could not load sensors.</p>';
+                return;
+            }
+
+            const container = document.getElementById('sensors');
+            container.innerHTML = '';
+
+            for (const s of (data.sensors || [])) {
+                if (s.device_id === 'hog_close') continue;
+
+                const card = document.createElement('div');
+                card.className = 'sensor-card';
+                card.dataset.deviceId = s.device_id;
+
+                const hasIp = s.ip && s.status === 'online';
+                const streamUrl = hasIp ? `http://${s.ip}:${CAMERA_HTTP_PORT}/stream` : '';
+                const diffUrl = hasIp ? `http://${s.ip}:${CAMERA_HTTP_PORT}/stream?diff=1` : '';
+                const configUrl = hasIp ? `http://${s.ip}:${CAMERA_HTTP_PORT}/config` : '';
+
+                card.innerHTML = `
+                    <div class="sensor-header">
+                        <span class="sensor-name">${s.label} (${s.device_id})</span>
+                        <span class="sensor-status ${hasIp ? 'online' : s.status === 'offline' ? 'offline' : 'no-camera'}">
+                            ${hasIp ? 'Online' : s.status === 'offline' ? 'Offline' : 'No camera'}
+                        </span>
+                    </div>
+                    <div class="stream-container" id="stream-${s.device_id}">
+                        ${hasIp
+                            ? `<img src="${streamUrl}" alt="Camera stream">`
+                            : `<div class="stream-placeholder">No camera stream available</div>`}
+                        ${hasIp ? `<button class="stream-toggle" onclick="toggleDiff('${s.device_id}', '${streamUrl}', '${diffUrl}')">Show diff</button>` : ''}
+                    </div>
+                    ${hasIp ? `
+                    <div class="controls">
+                        <div class="control-row">
+                            <label>ROI (x,y,w,h):</label>
+                            <div class="roi-inputs">
+                                <input type="number" id="roi-x-${s.device_id}" min="0" placeholder="x">
+                                <input type="number" id="roi-y-${s.device_id}" min="0" placeholder="y">
+                                <input type="number" id="roi-w-${s.device_id}" min="1" placeholder="w">
+                                <input type="number" id="roi-h-${s.device_id}" min="1" placeholder="h">
+                            </div>
+                        </div>
+                        <div class="control-row">
+                            <label>Threshold:</label>
+                            <input type="number" id="thr-${s.device_id}" min="1" max="255">
+                        </div>
+                        <div class="control-row">
+                            <label>Min pixels:</label>
+                            <input type="number" id="minpx-${s.device_id}" min="1">
+                        </div>
+                        <div class="control-row">
+                            <label>Cooldown (ms):</label>
+                            <input type="number" id="cd-${s.device_id}" min="0" step="100">
+                        </div>
+                        <div class="btn-row">
+                            <button class="btn btn-save" onclick="saveConfig('${s.device_id}', '${configUrl}')">Save</button>
+                            <span class="save-status" id="status-${s.device_id}">Saved!</span>
+                        </div>
+                    </div>` : ''}
+                `;
+                container.appendChild(card);
+
+                if (hasIp) {
+                    loadSensorConfig(s.device_id, configUrl);
+                }
+            }
+        }
+
+        async function loadSensorConfig(deviceId, configUrl) {
+            try {
+                const resp = await fetch(configUrl);
+                const cfg = await resp.json();
+                const roi = cfg.roi || [0, 0, 320, 240];
+                document.getElementById(`roi-x-${deviceId}`).value = roi[0];
+                document.getElementById(`roi-y-${deviceId}`).value = roi[1];
+                document.getElementById(`roi-w-${deviceId}`).value = roi[2];
+                document.getElementById(`roi-h-${deviceId}`).value = roi[3];
+                document.getElementById(`thr-${deviceId}`).value = cfg.threshold || 30;
+                document.getElementById(`minpx-${deviceId}`).value = cfg.min_pixel_count || 500;
+                document.getElementById(`cd-${deviceId}`).value = cfg.cooldown_ms || 2000;
+            } catch (e) {
+                console.error(`Failed to load config for ${deviceId}:`, e);
+            }
+        }
+
+        async function saveConfig(deviceId, configUrl) {
+            const roi = [
+                parseInt(document.getElementById(`roi-x-${deviceId}`).value) || 0,
+                parseInt(document.getElementById(`roi-y-${deviceId}`).value) || 0,
+                parseInt(document.getElementById(`roi-w-${deviceId}`).value) || 1,
+                parseInt(document.getElementById(`roi-h-${deviceId}`).value) || 1,
+            ];
+            const payload = {
+                roi,
+                threshold: parseInt(document.getElementById(`thr-${deviceId}`).value) || 30,
+                min_pixel_count: parseInt(document.getElementById(`minpx-${deviceId}`).value) || 500,
+                cooldown_ms: parseInt(document.getElementById(`cd-${deviceId}`).value) || 2000,
+            };
+            try {
+                await fetch(configUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const el = document.getElementById(`status-${deviceId}`);
+                el.classList.add('visible');
+                setTimeout(() => el.classList.remove('visible'), 2000);
+            } catch (e) {
+                alert(`Failed to save config for ${deviceId}`);
+            }
+        }
+
+        const diffState = {};
+        function toggleDiff(deviceId, streamUrl, diffUrl) {
+            const container = document.getElementById(`stream-${deviceId}`);
+            const img = container.querySelector('img');
+            const btn = container.querySelector('.stream-toggle');
+            if (!img || !btn) return;
+            diffState[deviceId] = !diffState[deviceId];
+            img.src = diffState[deviceId] ? diffUrl : streamUrl;
+            btn.textContent = diffState[deviceId] ? 'Show live' : 'Show diff';
+        }
+
+        loadSensors();
+    </script>
+</body>
+</html>

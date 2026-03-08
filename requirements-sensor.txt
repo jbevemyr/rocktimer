@@ -1,3 +1,6 @@
 # Sensor requirements (Pi Zero 2 W)
 # gpiozero och lgpio installeras via apt (python3-gpiozero, python3-lgpio)
+# picamera2 installeras via apt (python3-picamera2)
 pyyaml==6.0.1
+# Camera sensor (only needed when sensor_type: "camera")
+opencv-python-headless

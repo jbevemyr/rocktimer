@@ -7,6 +7,9 @@
 # - hog_far   (Pi Zero @ far hog)
 device_id: "tee"
 
+# Sensor type: "gpio" (laser + photodiode, default) or "camera" (Pi Camera + OpenCV)
+sensor_type: "gpio"
+
 gpio:
   # LM393 digital output pin (default wiring uses GPIO17 / physical pin 11)
   sensor_pin: 17
@@ -45,6 +48,16 @@ server:
 
   # Debug: log TTS spawns (optional)
   # tts_debug_log: "/var/log/stonetimer-tts-spawn.log"
+
+# Camera sensor settings (only used when sensor_type: "camera")
+# camera:
+#   resolution: [320, 240]
+#   fps: 60
+#   roi: [80, 100, 240, 140]   # x, y, w, h — calibrate per position
+#   threshold: 30               # pixel intensity threshold for frame diff
+#   min_pixel_count: 500        # minimum changed pixels to fire trigger
+#   cooldown_ms: 2000           # ignore new triggers within N ms
+#   http_port: 8081             # calibration server (MJPEG stream + config API)
 
 # Optional/advanced (currently not used by the code, kept for future):
 # max_history: 100
